@@ -9,6 +9,7 @@
 - **Persetujuan implementasi Fase 2:** Belum diberikan.
 - **Status kode aplikasi:** Belum dibuat atau belum diverifikasi.
 - **Status pengujian:** Belum tersedia.
+- **Status audit lingkungan:** Selesai sebagian — lingkungan terverifikasi 23 Oktober 2026; dua item menunggu keputusan (lihat §5: MariaDB vs MySQL, konfirmasi G1–G16).
 - **Terakhir diperbarui:** 23 Oktober 2026.
 
 Catatan: status kode dan pengujian harus diperbarui setelah kondisi lingkungan dan folder kerja diperiksa.
@@ -56,17 +57,21 @@ Status fase hanya boleh berubah berdasarkan pekerjaan yang benar-benar dilakukan
 
 ## 5. Kondisi Awal Proyek
 
-- **Source code aplikasi:** Belum dibuat atau belum diverifikasi.
-- **Repository Git:** Belum dibuat atau belum diverifikasi.
-- **Versi PHP:** Belum diverifikasi.
-- **Versi Composer:** Belum diverifikasi.
-- **Versi Laravel:** Belum ditentukan melalui pemeriksaan kompatibilitas.
-- **Versi Node.js dan npm:** Belum diverifikasi.
-- **MySQL:** Belum diverifikasi.
-- **Dependensi:** Belum diinstal atau belum diverifikasi.
-- **Database aplikasi:** Belum dibuat atau belum diverifikasi.
-- **Migration, model, controller, dan route aplikasi:** Belum dibuat atau belum diverifikasi.
-- **Tes otomatis:** Belum tersedia atau belum diverifikasi.
+- **Source code aplikasi:** Belum dibuat. Folder proyek hanya berisi 4 file MD (spesifikasi dan rencana). Tidak ada skeleton Laravel. (diverifikasi 23 Oktober 2026)
+- **Repository Git:** Belum diinisialisasi. Tidak ada folder `.git` di `C:\xampp\htdocs\e-commerce`. (diverifikasi 23 Oktober 2026)
+- **Sistem operasi:** Windows (XAMPP di `C:\xampp`). (diverifikasi 23 Oktober 2026)
+- **Lokasi proyek:** `C:\xampp\htdocs\e-commerce`. (diverifikasi 23 Oktober 2026)
+- **Versi PHP:** 8.2.12 (ZTS Visual C++ 2019 x64). Memenuhi minimum 8.2. (diverifikasi 23 Oktober 2026)
+- **Ekstensi PHP:** Semua ekstensi wajib tersedia — termasuk `mbstring` (diverifikasi 23 Oktober 2026), `pdo_mysql`, `openssl`, `tokenizer`, `xml`, `ctype`, `fileinfo`, `bcmath`, `curl`, `gd`, `intl`.
+- **Versi Composer:** 2.8.12. (diverifikasi 23 Oktober 2026)
+- **Versi Laravel:** Belum diinstal. Target 12.x (menunggu persetujuan G1).
+- **Versi Node.js dan npm:** Node.js v22.19.0, npm 10.9.3. (diverifikasi 23 Oktober 2026)
+- **MySQL:** **MariaDB 10.4.32** (bukan MySQL 8.0+). Menyimpang dari `PROJECT_SPEC.md §2` — menunggu keputusan K2.
+- **Git:** 2.51.0.windows.1. (diverifikasi 23 Oktober 2026)
+- **Dependensi:** Belum diinstal. (diverifikasi 23 Oktober 2026)
+- **Database aplikasi:** Belum dibuat. (diverifikasi 23 Oktober 2026)
+- **Migration, model, controller, dan route aplikasi:** Belum dibuat. (diverifikasi 23 Oktober 2026)
+- **Tes otomatis:** Belum tersedia. (diverifikasi 23 Oktober 2026)
 
 Jangan menganggap item di atas sudah tersedia tanpa memeriksa lingkungan dan folder kerja yang sebenarnya.
 

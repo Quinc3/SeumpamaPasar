@@ -62,11 +62,13 @@ Perubahan ruang lingkup memerlukan keputusan baru sebelum implementasi.
 |---|---|
 | Bahasa | PHP 8.2+ |
 | Framework | Laravel versi stabil yang kompatibel; asumsi awal Laravel 12.x, diverifikasi saat audit |
-| Database | MySQL 8.0+ |
+| Database | MySQL 8.0+ / MariaDB 10.4+ (kompatibel; diverifikasi pada audit Fase 2, 23 Oktober 2026) |
 | Frontend | Blade + Tailwind CSS melalui Vite |
 | Auth starter | Laravel Breeze (Blade) |
 | Testing | PHPUnit atau Pest, mengikuti kondisi proyek |
 | Deployment target | Lingkungan lokal untuk demonstrasi akademik |
+
+> Catatan (23 Oktober 2026): lingkungan pengembangan menggunakan MariaDB 10.4.32 (bukan MySQL 8.0+). Perbedaan kompatibilitas telah ditinjau; tidak ada fitur pada spesifikasi yang memerlukan MySQL 8.0 secara eksklusif (InnoDB, DECIMAL, FOREIGN KEY, UNIQUE, `SELECT ... FOR UPDATE`, dan window function semuanya didukung MariaDB 10.4). Keputusan: MariaDB 10.4 diterima sebagai kompatibel.
 
 ### 2.1 Asumsi yang wajib diverifikasi
 
@@ -885,6 +887,7 @@ Keputusan berikut sudah disetujui dan tidak boleh diubah tanpa persetujuan baru:
 20. Rumus refund adalah `refunded_amount = orders.subtotal`, tanpa ongkir atau pajak.
 21. File `.env` asli tidak pernah diminta atau dibagikan.
 22. Status dan checklist implementasi harus didasarkan pada bukti aktual, bukan hanya isi dokumen.
+23. Database: MySQL 8.0+ atau MariaDB 10.4+ (kompatibel). Lingkungan pengembangan saat ini menggunakan MariaDB 10.4.32 dan disetujui pada 23 Oktober 2026.
 
 ---
 
