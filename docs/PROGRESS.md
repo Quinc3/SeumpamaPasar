@@ -46,7 +46,7 @@ Detail lengkap mengikuti `PROJECT_SPEC.md`.
 | Fase | Deskripsi | Status |
 |---|---|---|
 | Fase 1 | Discovery, spesifikasi, dan perencanaan | Selesai dan disetujui |
-| Fase 2 | Persiapan lingkungan, inisialisasi proyek, dan fondasi aplikasi | Belum dimulai; menunggu persetujuan |
+| Fase 2 | Fondasi aplikasi | Selesai dan terverifikasi 23 Oktober 2026 |
 | Fase 3 | Fitur marketplace B2C dan C2C | Belum dimulai |
 | Fase 4 | Fitur B2B dan harga grosir | Belum dimulai |
 | Fase 5 | Simulasi layanan digital | Belum dimulai |
@@ -57,23 +57,30 @@ Status fase hanya boleh berubah berdasarkan pekerjaan yang benar-benar dilakukan
 
 ## 5. Kondisi Awal Proyek
 
-- **Source code aplikasi:** Belum dibuat. Folder proyek hanya berisi 4 file MD (spesifikasi dan rencana). Tidak ada skeleton Laravel. (diverifikasi 23 Oktober 2026)
-- **Repository Git:** Belum diinisialisasi. Tidak ada folder `.git` di `C:\xampp\htdocs\e-commerce`. (diverifikasi 23 Oktober 2026)
-- **Sistem operasi:** Windows (XAMPP di `C:\xampp`). (diverifikasi 23 Oktober 2026)
+- **Source code aplikasi:** Laravel 12.70.1 + Breeze 2.4.2 (Blade). (diverifikasi 23 Oktober 2026)
+- **Repository Git:** Branch `main`. (diverifikasi 23 Oktober 2026)
+- **Sistem operasi:** Windows, XAMPP di `C:\xampp`. (diverifikasi 23 Oktober 2026)
 - **Lokasi proyek:** `C:\xampp\htdocs\e-commerce`. (diverifikasi 23 Oktober 2026)
-- **Versi PHP:** 8.2.12 (ZTS Visual C++ 2019 x64). Memenuhi minimum 8.2. (diverifikasi 23 Oktober 2026)
-- **Ekstensi PHP:** Semua ekstensi wajib tersedia — termasuk `mbstring` (diverifikasi 23 Oktober 2026), `pdo_mysql`, `openssl`, `tokenizer`, `xml`, `ctype`, `fileinfo`, `bcmath`, `curl`, `gd`, `intl`.
+- **Versi PHP:** 8.2.12. (diverifikasi 23 Oktober 2026)
+- **Ekstensi PHP:** Semua wajib tersedia, termasuk `mbstring`. (diverifikasi 23 Oktober 2026)
 - **Versi Composer:** 2.8.12. (diverifikasi 23 Oktober 2026)
-- **Versi Laravel:** Belum diinstal. Target 12.x (menunggu persetujuan G1).
-- **Versi Node.js dan npm:** Node.js v22.19.0, npm 10.9.3. (diverifikasi 23 Oktober 2026)
-- **MySQL:** **MariaDB 10.4.32** (bukan MySQL 8.0+). Menyimpang dari `PROJECT_SPEC.md §2` — menunggu keputusan K2.
+- **Versi Laravel:** 12.70.1. (diverifikasi 23 Oktober 2026)
+- **Versi Node.js dan npm:** v22.19.0 / 10.9.3. (diverifikasi 23 Oktober 2026)
+- **Database:** MariaDB 10.4.32, database `e_commerce`, charset `utf8mb4`. (diverifikasi 23 Oktober 2026)
 - **Git:** 2.51.0.windows.1. (diverifikasi 23 Oktober 2026)
-- **Dependensi:** Belum diinstal. (diverifikasi 23 Oktober 2026)
-- **Database aplikasi:** Belum dibuat. (diverifikasi 23 Oktober 2026)
-- **Migration, model, controller, dan route aplikasi:** Belum dibuat. (diverifikasi 23 Oktober 2026)
-- **Tes otomatis:** Belum tersedia. (diverifikasi 23 Oktober 2026)
+- **Dependensi Composer:** Breeze 2.4.2, Tinker 2.10.1, PHPUnit 11.5, Pint, Pail, Sail. (diverifikasi 23 Oktober 2026)
+- **Dependensi npm:** Terinstal di `node_modules/`. (diverifikasi 23 Oktober 2026)
+- **Migration:** 19 migration (3 bawaan + 16 kustom). (diverifikasi 23 Oktober 2026)
+- **Model:** 16 model dengan cast enum, `$fillable` eksplisit, relasi. (diverifikasi 23 Oktober 2026)
+- **Enums:** 11 file sesuai spec. (diverifikasi 23 Oktober 2026)
+- **Middleware:** `EnsureRole`, `EnsureSellerActive` — terdaftar di `bootstrap/app.php`. (diverifikasi 23 Oktober 2026)
+- **Policy:** `ProductPolicy`, `OrderPolicy`, `CheckoutPolicy`, `DigitalTransactionPolicy` — terdaftar di `AppServiceProvider`. (diverifikasi 23 Oktober 2026)
+- **Seeder:** `AdminUserSeeder`, `CategorySeeder`, `DigitalProductSeeder`, `DummyBillSeeder` (via `db:seed`), `DemoUsersSeeder` (manual). (diverifikasi 23 Oktober 2026)
+- **Routes:** `admin.dashboard`, `seller.dashboard`, `buyer.dashboard`, Breeze routes. 26 routes total. (diverifikasi 23 Oktober 2026)
+- **Views:** layout admin/seller/app, komponen `banner-simulation`, `badge`, 3 dashboard placeholder. (diverifikasi 23 Oktober 2026)
+- **Tes otomatis:** `vendor\bin\phpunit` → 25/25 PASS. `phpunit.xml` mengoverride `APP_URL=http://localhost` untuk menghindari konflik dengan `.env` dev. (diverifikasi 23 Oktober 2026)
 
-Jangan menganggap item di atas sudah tersedia tanpa memeriksa lingkungan dan folder kerja yang sebenarnya.
+**Catatan penting:** `.env` lokal menyetel `APP_URL=http://localhost`. Untuk development via `php artisan serve`, ini konsisten. Akses via Apache XAMPP (`http://localhost/e-commerce/public`) memerlukan penyesuaian `APP_URL` di `.env` — tetapi test tetap berjalan karena `phpunit.xml` mengoverride.
 
 ## 6. Riwayat Pekerjaan
 
@@ -87,6 +94,24 @@ Jangan menganggap item di atas sudah tersedia tanpa memeriksa lingkungan dan fol
 - Tes aplikasi belum diklaim lulus.
 
 Pekerjaan berikutnya dicatat sebagai entri baru tanpa menghapus riwayat sebelumnya.
+
+### 23 Oktober 2026 — Fase 2 selesai: Fondasi aplikasi
+
+- **Status:** Selesai dan terverifikasi. Menunggu persetujuan Fase 3.
+- **Enums:** 11 file di `app/Enums/`.
+- **Migrations:** 16 migration kustom (identitas/profil, katalog, keranjang, checkout, order, payment, layanan digital).
+- **Models:** 16 model dengan cast enum, `$fillable` eksplisit, relasi.
+- **Seeders:** 4 seeder inti + 1 seeder demo akun test.
+- **Middleware:** `EnsureRole`, `EnsureSellerActive` + registrasi alias.
+- **Policies:** 4 Policy (`Product`, `Order`, `Checkout`, `DigitalTransaction`) + registrasi di `AppServiceProvider`.
+- **Routes:** `routes/admin.php`, `routes/seller.php`, modifikasi `web.php`.
+- **Views:** layout admin/seller/app, komponen `banner-simulation`, `badge`, 3 dashboard placeholder.
+- **Config:** `config/app.php` timezone `Asia/Jakarta` via `APP_TIMEZONE`; `.env.example` dirapikan; `phpunit.xml` override `APP_URL`.
+- **Perintah yang dijalankan:** `php artisan migrate` (19 migration), `php artisan db:seed`, `php artisan db:seed --class=DemoUsersSeeder`, `vendor\bin\phpunit`, berbagai perintah `php artisan tinker` verifikasi.
+- **Hasil tes:** `vendor\bin\phpunit` → **25/25 PASS, 61 assertions**. (bukti aktual)
+- **Masalah tersisa:** Tidak ada. 404 pada test sebelumnya diperbaiki dengan override `APP_URL` di `phpunit.xml`.
+- **Keputusan terkait:** `APP_URL` di `.env` = `http://localhost` (untuk `php artisan serve`). Bila akses via Apache XAMPP, perlu disesuaikan.
+- **Langkah berikutnya:** Menunggu persetujuan eksplisit pengguna untuk masuk Fase 3 — Marketplace B2C & C2C.
 
 ## 7. Langkah Berikutnya
 
