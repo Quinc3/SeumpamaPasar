@@ -3,7 +3,6 @@
 use App\Enums\SellerStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Buyer\AddressController;
-use App\Http\Controllers\Buyer\DashboardController as BuyerDashboardController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
@@ -18,18 +17,10 @@ Route::get('/', function () {
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/produk/{product:slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    if ($user->role === UserRole::Admin) {
-        return redirect()->route('admin.dashboard');
-    }
-    if ($user->sellerProfile?->status === SellerStatus::Active) {
-        return redirect()->route('seller.dashboard');
-    }
-    return redirect()->route('buyer.dashboard');
-})->middleware(['auth'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\HubController::class, 'index'])
+    ->middleware(['auth'])->name('dashboard');
 
-Route::get('/akun', [BuyerDashboardController::class, 'index'])
+    Route::get('/akun', [\App\Http\Controllers\HubController::class, 'index'])
     ->middleware(['auth'])->name('buyer.dashboard');
 
 Route::middleware('auth')->group(function () {
