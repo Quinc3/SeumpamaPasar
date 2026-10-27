@@ -13,8 +13,10 @@
         @if (session('status') === 'password-updated')
             <x-alert variant="success">Password berhasil diperbarui.</x-alert>
         @endif
+        @if (session('status') === 'seller-submitted')
+            <x-alert variant="success">Pengajuan toko berhasil dikirim. Menunggu verifikasi admin.</x-alert>
+        @endif
 
-        {{-- Header profil --}}
         <x-card>
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <x-avatar :name="$user->name" size="xl" />
@@ -28,8 +30,8 @@
                     <p class="text-sm text-surface-600">{{ $user->email }}</p>
                     <p class="text-xs text-surface-500 mt-0.5">
                         Tipe akun: {{ $user->account_type?->value ?? 'personal' }}
-                        @if ($user->isMember())
-                            &middot; Member sejak {{ $user->member_since?->format('d M Y') }}
+                        @if ($user->isMember() && $user->member_since)
+                            &middot; Member sejak {{ $user->member_since->format('d M Y') }}
                         @endif
                     </p>
                 </div>
@@ -42,7 +44,6 @@
             </div>
         </x-card>
 
-        {{-- Statistik --}}
         <div class="grid grid-cols-3 gap-3">
             <a href="{{ route('buyer.orders.index') }}" class="block">
                 <x-card class="hover:shadow-card-hover transition">
@@ -64,7 +65,6 @@
             </a>
         </div>
 
-        {{-- Promo Member (kalau belum aktif) --}}
         @unless ($user->isMember())
             <x-card class="border-primary-200 bg-primary-50">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -87,7 +87,6 @@
             </x-card>
         @endunless
 
-        {{-- Afiliasi --}}
         @if ($affiliate)
             <x-card>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -129,25 +128,61 @@
             </x-card>
         @endif
 
-        {{-- Toko Saya (kalau seller) --}}
-        @if ($sellerProfile)
-            <x-card>
-                <a href="{{ route('seller.dashboard') }}" class="flex items-center justify-between gap-3 hover:text-primary-700">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="rounded-md bg-primary-50 p-2 shrink-0">
+        @unless ($sellerProfile)
+            <x-card class="border-primary-200 bg-primary-50">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div class="flex items-start gap-3 flex-1">
+                        <div class="rounded-full bg-primary-100 p-2 shrink-0">
                             <x-icon name="home" size="md" class="text-primary-700" />
                         </div>
-                        <div class="min-w-0">
-                            <div class="text-sm font-semibold text-surface-900 truncate">Toko: {{ $sellerProfile->store_name }}</div>
-                            <div class="text-xs text-surface-500">{{ ucfirst($sellerProfile->seller_type?->value ?? '-') }} &middot; {{ $sellerProfile->status?->value ?? '-' }}</div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-semibold text-surface-900">Buka Toko Sendiri</h3>
+                            <p class="text-xs text-surface-600 mt-1">Jual produk Anda di platform ini. Kelola produk, terima pesanan, dan kelola toko Anda sendiri.</p>
                         </div>
                     </div>
-                    <x-icon name="chevron-right" size="md" class="text-surface-400 shrink-0" />
-                </a>
+                    <a href="{{ route('buyer.seller.register.show') }}" class="shrink-0">
+                        <x-primary-button type="button">
+                            <x-icon name="plus" size="sm" class="mr-1" /> Buka Toko
+                        </x-primary-button>
+                    </a>
+                </div>
+            </x-card>
+        @endunless
+
+        @if ($sellerProfile)
+            <x-card>
+                @if ($sellerProfile->status === \App\Enums\SellerStatus::Active)
+                    <a href="{{ route('seller.dashboard') }}" class="flex items-center justify-between gap-3 hover:text-primary-700">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="rounded-md bg-primary-50 p-2 shrink-0">
+                                <x-icon name="home" size="md" class="text-primary-700" />
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-semibold text-surface-900 truncate">Toko: {{ $sellerProfile->store_name }}</div>
+                                <div class="text-xs text-surface-500">{{ ucfirst($sellerProfile->seller_type?->value ?? '-') }} &middot; {{ $sellerProfile->status?->value ?? '-' }}</div>
+                            </div>
+                        </div>
+                        <x-icon name="chevron-right" size="md" class="text-surface-400 shrink-0" />
+                    </a>
+                @else
+                    <a href="{{ route('buyer.seller.register.show') }}" class="flex items-center justify-between gap-3 hover:text-primary-700">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="rounded-md bg-amber-50 p-2 shrink-0">
+                                <x-icon name="home" size="md" class="text-amber-700" />
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-semibold text-surface-900 truncate">Toko: {{ $sellerProfile->store_name }}</div>
+                                <div class="text-xs text-surface-500">
+                                    {{ $sellerProfile->status === \App\Enums\SellerStatus::Pending ? 'Menunggu verifikasi admin' : 'Ditangguhkan' }}
+                                </div>
+                            </div>
+                        </div>
+                        <x-icon name="chevron-right" size="md" class="text-surface-400 shrink-0" />
+                    </a>
+                @endif
             </x-card>
         @endif
 
-        {{-- Profil Bisnis (kalau punya) --}}
         @if ($businessProfile)
             <x-card>
                 <a href="{{ route('buyer.business.show') }}" class="flex items-center justify-between gap-3 hover:text-primary-700">
@@ -165,7 +200,6 @@
             </x-card>
         @endif
 
-        {{-- Menu cepat --}}
         <x-card>
             <div class="space-y-1">
                 <a href="{{ route('buyer.orders.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">

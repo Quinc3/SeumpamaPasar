@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\ProductModerationController;
 use App\Http\Controllers\Admin\AffiliateController;
+use App\Http\Controllers\Admin\SellerController;
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
@@ -22,4 +23,9 @@ Route::post('/moderasi/{product}/tolak', [ProductModerationController::class, 'r
 Route::get('/afiliasi', [AffiliateController::class, 'index'])->name('affiliates.index');
 Route::patch('/afiliasi/{affiliate}/tangguhkan', [AffiliateController::class, 'suspend'])->name('affiliates.suspend');
 Route::patch('/afiliasi/{affiliate}/aktifkan', [AffiliateController::class, 'activate'])->name('affiliates.activate');
+
+Route::get('/penjual', [SellerController::class, 'index'])->name('sellers.index');
+Route::patch('/penjual/{seller}/setujui', [SellerController::class, 'approve'])->name('sellers.approve');
+Route::patch('/penjual/{seller}/tangguhkan', [SellerController::class, 'suspend'])->name('sellers.suspend');
+Route::patch('/penjual/{seller}/aktifkan', [SellerController::class, 'activate'])->name('sellers.activate');
     });

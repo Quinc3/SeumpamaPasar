@@ -61,6 +61,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/akun/afiliasi', [\App\Http\Controllers\Buyer\AffiliateController::class, 'show'])->name('buyer.affiliate.show');
     Route::post('/akun/afiliasi', [\App\Http\Controllers\Buyer\AffiliateController::class, 'activate'])->name('buyer.affiliate.activate');
+
+        // Seller registration
+        Route::get('/akun/toko/daftar', [\App\Http\Controllers\Buyer\SellerRegistrationController::class, 'show'])->name('buyer.seller.register.show');
+        Route::post('/akun/toko/daftar', [\App\Http\Controllers\Buyer\SellerRegistrationController::class, 'store'])->name('buyer.seller.register.store');
 });
 
 require __DIR__.'/auth.php';
