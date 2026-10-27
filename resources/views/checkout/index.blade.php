@@ -18,6 +18,10 @@
 
         <form method="POST" action="{{ route('checkout.store') }}" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             @csrf
+            @foreach ($selectedIds ?? [] as $cid)
+                <input type="hidden" name="cart_item_ids[]" value="{{ $cid }}">
+            @endforeach
+
             <div class="lg:col-span-2 space-y-4">
                 <x-card>
                     <h2 class="text-sm font-semibold text-surface-900 mb-3">Alamat Pengiriman</h2>

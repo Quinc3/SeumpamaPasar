@@ -52,9 +52,22 @@
         </x-card>
 
         @if ($order->refunded_at)
-            <x-alert variant="info">
-                Pesanan dibatalkan dan <strong>refund simulasi</strong> sebesar <x-price :amount="$order->refunded_amount" class="text-xs" /> telah dicatat. Tidak ada uang sungguhan yang berpindah.
-            </x-alert>
+            <x-card class="border-blue-200 bg-blue-50">
+                <div class="flex items-start gap-3">
+                    <div class="rounded-full bg-blue-100 p-2 shrink-0">
+                        <x-icon name="arrow-path" size="md" class="text-blue-700" />
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-surface-900">Refund simulasi</p>
+                        <p class="text-xs text-surface-700 mt-1">
+                            Dana sebesar <strong>Rp {{ number_format($order->refunded_amount, 0, ',', '.') }}</strong> telah dikembalikan ke <strong>SeumpamaPay</strong> a.n. <strong>{{ $order->buyer->name }}</strong>.
+                        </p>
+                        <p class="text-[11px] text-surface-500 mt-1.5">
+                            Ini hanya pencatatan simulasi — tidak ada uang sungguhan yang berpindah.
+                        </p>
+                    </div>
+                </div>
+            </x-card>
         @endif
 
         @if ($order->status === \App\Enums\OrderStatus::Shipped)

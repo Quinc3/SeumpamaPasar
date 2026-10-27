@@ -15,7 +15,7 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('h
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/produk/{product:slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
-Route::get('/dashboard', fn () => redirect()->route('profile.show'))
+Route::get('/dashboard', [\App\Http\Controllers\HubController::class, 'index'])
     ->middleware(['auth'])->name('dashboard');
 
     Route::get('/akun', fn () => redirect()->route('profile.show'))

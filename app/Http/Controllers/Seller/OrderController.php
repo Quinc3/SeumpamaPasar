@@ -65,4 +65,39 @@ class OrderController extends Controller
             default => back()->with('error', 'Pembatalan gagal.'),
         };
     }
+
+    public function bulkStatus(Request $request, OrderStatusService $service): RedirectResponse
+    {
+        $seller = $request->user()->sellerProfile;
+
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+            'action' => ['required', 'in:process,ship'],
+        ]);
+
+        $target = $data['action'] === 'process'
+            ? \App\Enums\OrderStatus::Processing
+            : \App\Enums\OrderStatus::Shipped;
+
+        $orders = Order::query()
+            ->whereIn('id', $data['ids'])
+            ->where('seller_profile_id', $seller->id)
+            ->get();
+
+        $ok = 0;
+        $fail = 0;
+        foreach ($orders as $order) {
+            if ($service->transition($order, $target->value)) {
+                $ok++;
+            } else {
+                $fail++;
+            }
+        }
+
+        $msg = "{$ok} pesanan diubah ke " . $target->value;
+        if ($fail > 0) $msg .= ", {$fail} dilewati (status tidak valid)";
+
+        return back()->with('status', $msg);
+    }
 }

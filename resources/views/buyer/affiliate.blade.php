@@ -30,20 +30,25 @@
                         }
                     }"
                     class="space-y-3">
-                    <div class="flex items-center gap-2">
-                        <span class="text-2xl font-mono font-bold text-primary-700">{{ $profile->referral_code }}</span>
-                        <button type="button" x-on:click="copy('{{ $profile->referral_code }}', 'Kode')"
-                                class="inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:bg-primary-50 border border-primary-200 rounded-md px-2 py-1">
-                            <x-icon name="check" size="xs" /> Salin
-                        </button>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-surface-500 mb-1">Kode Referral</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-mono font-bold text-primary-700">{{ $profile->referral_code }}</span>
+                            <button type="button" x-on:click="copy('{{ $profile->referral_code }}', 'Kode')"
+                                    class="inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:bg-primary-50 border border-primary-200 rounded-md px-2 py-1">
+                                <x-icon name="copy" size="sm" /> Salin
+                            </button>
+                        </div>
                     </div>
-
-                    <div class="flex items-center gap-2">
-                        <code class="flex-1 text-xs text-surface-600 bg-surface-50 border border-surface-200 rounded px-2 py-1.5 break-all">{{ url('/') }}?ref={{ $profile->referral_code }}</code>
-                        <button type="button" x-on:click="copy('{{ url('/') }}?ref={{ $profile->referral_code }}', 'Link')"
-                                class="inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:bg-primary-50 border border-primary-200 rounded-md px-2 py-1 shrink-0">
-                            <x-icon name="check" size="xs" /> Salin
-                        </button>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-surface-500 mb-1">Link Referral</p>
+                        <div class="flex items-center gap-2">
+                            <code class="flex-1 text-xs text-surface-600 bg-surface-50 border border-surface-200 rounded px-2 py-1.5 break-all">{{ url('/katalog') }}?ref={{ $profile->referral_code }}</code>
+                            <button type="button" x-on:click="copy('{{ url('/katalog') }}?ref={{ $profile->referral_code }}', 'Link')"
+                                    class="inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:bg-primary-50 border border-primary-200 rounded-md px-2 py-1 shrink-0">
+                                <x-icon name="copy" size="sm" /> Salin
+                            </button>
+                        </div>
                     </div>
                 </div>
             </x-card>

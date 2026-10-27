@@ -15,6 +15,9 @@ Route::middleware(['auth', 'seller.active'])
         Route::post('/pesanan/{order}/kirim', [OrderController::class, 'ship'])->name('orders.ship');
         Route::post('/pesanan/{order}/batal', [OrderController::class, 'cancel'])->name('orders.cancel');
 
+        Route::post('/pesanan/bulk-status', [\App\Http\Controllers\Seller\OrderController::class, 'bulkStatus'])->name('orders.bulk-status');
+        Route::post('/produk/bulk-archive', [\App\Http\Controllers\Seller\ProductController::class, 'bulkArchive'])->name('products.bulk-archive');
+
         Route::get('/produk', [\App\Http\Controllers\Seller\ProductController::class, 'index'])->name('products.index');
         Route::get('/produk/baru', [\App\Http\Controllers\Seller\ProductController::class, 'create'])->name('products.create');
         Route::post('/produk', [\App\Http\Controllers\Seller\ProductController::class, 'store'])->name('products.store');

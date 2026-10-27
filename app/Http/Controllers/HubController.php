@@ -20,7 +20,9 @@ class HubController extends Controller
             'sellerProductCount' => $user->sellerProfile?->products()->count() ?? 0,
             'sellerOrderCount' => $user->sellerProfile?->orders()->count() ?? 0,
             'affiliateCommissionTotal' => $user->affiliateProfile
-                ? $user->affiliateProfile->commissions()->where('status', CommissionStatus::Approved->value)->sum('amount')
+                ? (float) $user->affiliateProfile->commissions()
+                    ->where('status', CommissionStatus::Approved->value)
+                    ->sum('amount')
                 : 0,
         ]);
     }

@@ -46,6 +46,29 @@
             </div>
         </x-card>
 
+        @if ($isPaid)
+            <x-card>
+                @php
+                    $uid = str_pad((string) $checkout->user_id, 4, '0', STR_PAD_LEFT);
+                    $cid = str_pad((string) $checkout->id, 8, '0', STR_PAD_LEFT);
+                    $method = $checkout->payment->method;
+                @endphp
+                <div class="flex items-start gap-3">
+                    <x-icon name="check-circle" size="lg" class="text-green-600 flex-shrink-0 mt-0.5" />
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-surface-900">Pembayaran diterima</p>
+                        @if ($method === 'demo_va')
+                            <p class="text-xs text-surface-600 mt-1">Via Virtual Account BCA <span class="font-mono">{{ trim(chunk_split('8808' . $uid . $cid, 4, ' ')) }}</span></p>
+                        @elseif ($method === 'demo_ewallet')
+                            <p class="text-xs text-surface-600 mt-1">Via SeumpamaPay <span class="font-mono">0812-{{ $uid }}-{{ substr($cid, 4) }}</span></p>
+                        @elseif ($method === 'demo_transfer')
+                            <p class="text-xs text-surface-600 mt-1">Via Transfer BCA <span class="font-mono">1234567890</span></p>
+                        @endif
+                    </div>
+                </div>
+            </x-card>
+        @endif
+
         <x-card>
             <h2 class="text-sm font-semibold text-surface-900 mb-2">Pesanan</h2>
             @foreach ($checkout->orders as $order)

@@ -137,6 +137,30 @@ class ProductController extends Controller
         return back()->with('status', 'product-archived');
     }
 
+    public function bulkArchive(Request $request): RedirectResponse
+    {
+        $seller = $request->user()->sellerProfile;
+
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $products = Product::query()
+            ->whereIn('id', $data['ids'])
+            ->where('seller_profile_id', $seller->id)
+            ->where('status', '!=', ProductStatus::Archived->value)
+            ->get();
+
+        $count = 0;
+        foreach ($products as $p) {
+            $p->forceFill(['status' => ProductStatus::Archived])->save();
+            $count++;
+        }
+
+        return back()->with('status', "{$count} produk diarsipkan");
+    }
+
     private function authorizeOwnership(Request $request, Product $product): void
     {
         abort_unless($product->seller_profile_id === $request->user()->sellerProfile->id, 403);

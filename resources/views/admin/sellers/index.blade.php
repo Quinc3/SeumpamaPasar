@@ -3,9 +3,9 @@
 @section('title', 'Kelola Penjual')
 
 @section('content')
-    @if (session('status'))
-        <x-alert variant="success">Status penjual diperbarui.</x-alert>
-    @endif
+@if (session('status'))
+    <x-alert variant="success">{{ session('status') }}</x-alert>
+@endif
 
     @if ($sellers->isEmpty())
         <x-card padding="none">

@@ -16,10 +16,16 @@ class CheckoutController extends Controller
     public function index(Request $request, \App\Services\PriceResolver $priceResolver): View|RedirectResponse
     {
         $user = $request->user();
-        $items = $user->cartItems()->with(['product.sellerProfile'])->get();
+        $selectedIds = $request->query('cart_item_ids', []);
+
+        $itemsQuery = $user->cartItems()->with(['product.sellerProfile']);
+        if (! empty($selectedIds)) {
+            $itemsQuery->whereIn('id', $selectedIds);
+        }
+        $items = $itemsQuery->get();
 
         if ($items->isEmpty()) {
-            return redirect()->route('cart.index')->withErrors(['cart' => 'Keranjang kosong.']);
+            return redirect()->route('cart.index')->withErrors(['cart' => 'Pilih minimal 1 produk untuk checkout.']);
         }
 
         $addresses = $user->addresses()->orderByDesc('is_default')->orderByDesc('id')->get();
@@ -27,21 +33,18 @@ class CheckoutController extends Controller
 
         $isMember = $user->isMember();
 
-        // Hitung per item dengan resolver
         $lineItems = $items->map(function ($item) use ($user, $priceResolver, $isMember) {
             $resolved = $priceResolver->resolve($user, $item->product, $item->quantity);
             $unitPrice = $resolved['unit_price'];
-            if ($isMember) {
+            if ($isMember && $item->product->sales_channel === \App\Enums\SalesChannel::B2C) {
                 $unitPrice = round($unitPrice * 0.95, 2);
             }
-            $lineTotal = round($unitPrice * $item->quantity, 2);
-
             return [
                 'cart_item' => $item,
                 'unit_price' => $unitPrice,
-                'line_total' => $lineTotal,
-                'min_qty' => $resolved['min_qty'],
+                'line_total' => round($unitPrice * $item->quantity, 2),
                 'applies_tier' => $resolved['applies_tier'],
+                'min_qty' => $resolved['min_qty'],
             ];
         });
 
@@ -60,9 +63,10 @@ class CheckoutController extends Controller
             'defaultAddress' => $defaultAddress,
             'baseSubtotal' => $baseSubtotal,
             'isMember' => $isMember,
-            'discount' => 0, // diskon sudah masuk per unit_price di lineItems
+            'discount' => 0,
             'total' => $baseSubtotal,
             'methods' => $methods,
+            'selectedIds' => $items->pluck('id')->all(),
         ]);
     }
 
@@ -71,6 +75,11 @@ class CheckoutController extends Controller
         $data = $request->validate([
             'address_id' => ['required', 'integer'],
             'method' => ['required', 'in:demo_transfer,demo_ewallet,demo_va'],
+            'cart_item_ids' => ['required', 'array', 'min:1'],
+            'cart_item_ids.*' => ['integer'],
+        ], [
+            'cart_item_ids.required' => 'Pilih minimal 1 produk untuk checkout.',
+            'cart_item_ids.min' => 'Pilih minimal 1 produk untuk checkout.',
         ]);
 
         $address = Address::query()
@@ -79,7 +88,7 @@ class CheckoutController extends Controller
             ->firstOrFail();
 
         try {
-            $checkout = $service->createFromCart($request->user(), $address);
+            $checkout = $service->createFromCart($request->user(), $address, $data['cart_item_ids']);
             $checkout->payment->update(['method' => $data['method']]);
 
             return redirect()->route('checkout.pay', $checkout->reference);

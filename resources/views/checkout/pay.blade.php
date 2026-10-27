@@ -11,7 +11,42 @@
             <a href="{{ route('cart.index') }}" class="text-sm text-surface-600 hover:text-surface-900">← Keranjang</a>
         </div>
 
+        @php
+            $user = $checkout->user;
+            $uid = str_pad((string) $user->id, 4, '0', STR_PAD_LEFT);
+            $cid = str_pad((string) $checkout->id, 8, '0', STR_PAD_LEFT);
+            $method = $checkout->payment->method;
+            $vaNumber = chunk_split('8808' . $uid . $cid, 4, ' ');
+            $ewalletNumber = '0812-' . $uid . '-' . substr($cid, 4);
+        @endphp
+
         <x-card>
+            {{-- Tujuan pembayaran berdasarkan metode --}}
+            @if ($method === 'demo_va')
+                <div class="text-center pb-4 border-b border-surface-200 mb-4">
+                    <p class="text-xs uppercase tracking-wide text-surface-500">Virtual Account — BCA</p>
+                    <p class="text-2xl sm:text-3xl font-mono font-bold text-primary-700 tracking-wider mt-2">{{ trim($vaNumber) }}</p>
+                    <p class="text-xs text-surface-500 mt-1.5">a.n. {{ $user->name }}</p>
+                </div>
+            @elseif ($method === 'demo_ewallet')
+                <div class="text-center pb-4 border-b border-surface-200 mb-4">
+                    <div class="inline-flex items-center gap-2 justify-center">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-primary-700 text-white text-[10px] font-bold">SP</span>
+                        <span class="text-sm font-semibold text-surface-900">SeumpamaPay</span>
+                    </div>
+                    <p class="text-2xl sm:text-3xl font-mono font-bold text-primary-700 tracking-wider mt-2">{{ $ewalletNumber }}</p>
+                    <p class="text-xs text-surface-500 mt-1.5">a.n. {{ $user->name }}</p>
+                </div>
+            @elseif ($method === 'demo_transfer')
+                <div class="pb-4 border-b border-surface-200 mb-4">
+                    <p class="text-xs uppercase tracking-wide text-surface-500">Transfer Bank — BCA</p>
+                    <p class="text-xl font-mono font-bold text-primary-700 mt-1">1234567890</p>
+                    <p class="text-sm text-surface-700 mt-1">a.n. PT Seumpama Pasar Nusantara</p>
+                    <p class="text-xs text-surface-500 mt-3">Berita transfer:</p>
+                    <p class="font-mono text-sm text-surface-900 mt-0.5 break-all bg-surface-50 px-2 py-1 rounded">{{ $checkout->reference }}</p>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
                     <p class="text-xs uppercase tracking-wide text-surface-500">Referensi</p>

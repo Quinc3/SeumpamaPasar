@@ -19,14 +19,19 @@ class CheckoutService
 {
     public function __construct(private PriceResolver $priceResolver) {}
 
-    public function createFromCart(User $user, Address $address): Checkout
+    public function createFromCart(User $user, Address $address, array $cartItemIds = []): Checkout
     {
-        return DB::transaction(function () use ($user, $address) {
-            $items = CartItem::query()
+        return DB::transaction(function () use ($user, $address, $cartItemIds) {
+            $itemsQuery = CartItem::query()
                 ->where('user_id', $user->id)
                 ->with(['product.sellerProfile'])
-                ->lockForUpdate()
-                ->get();
+                ->lockForUpdate();
+
+            if (! empty($cartItemIds)) {
+                $itemsQuery->whereIn('id', $cartItemIds);
+            }
+
+            $items = $itemsQuery->get();
 
             if ($items->isEmpty()) {
                 throw new RuntimeException('Keranjang kosong.');
@@ -113,7 +118,11 @@ class CheckoutService
                 'reference' => 'PAY-'.strtoupper(\Illuminate\Support\Str::random(12)),
             ]);
 
-            CartItem::where('user_id', $user->id)->delete();
+            if (! empty($cartItemIds)) {
+                CartItem::where('user_id', $user->id)->whereIn('id', $cartItemIds)->delete();
+            } else {
+                CartItem::where('user_id', $user->id)->delete();
+            }
 
             return $checkout->fresh(['orders.items', 'payment']);
         });

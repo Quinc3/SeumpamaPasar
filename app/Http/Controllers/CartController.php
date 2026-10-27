@@ -25,7 +25,7 @@ class CartController extends Controller
         $lineItems = $items->map(function ($item) use ($user, $priceResolver, $isMember) {
             $resolved = $priceResolver->resolve($user, $item->product, $item->quantity);
             $unitPrice = $resolved['unit_price'];
-            if ($isMember) {
+            if ($isMember && $item->product->sales_channel === \App\Enums\SalesChannel::B2C) {
                 $unitPrice = round($unitPrice * 0.95, 2);
             }
             return [
@@ -37,9 +37,20 @@ class CartController extends Controller
             ];
         });
 
-        $subtotal = $lineItems->sum(fn ($li) => $li['line_total']);
+        // Group by seller
+        $groups = $lineItems->groupBy(fn ($li) => $li['cart_item']->product->seller_profile_id)
+            ->map(function ($group, $sellerId) {
+                $seller = $group->first()['cart_item']->product->sellerProfile;
+                return [
+                    'seller' => $seller,
+                    'items' => $group,
+                    'subtotal' => $group->sum('line_total'),
+                ];
+            });
 
-        return view('cart.index', compact('items', 'lineItems', 'subtotal', 'isMember'));
+        $subtotal = $lineItems->sum('line_total');
+
+        return view('cart.index', compact('items', 'lineItems', 'groups', 'subtotal', 'isMember'));
     }
 
     public function add(Request $request, Product $product): RedirectResponse
