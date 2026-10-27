@@ -48,11 +48,15 @@ class OrderController extends Controller
         return back()->with($ok ? 'status' : 'error', $ok ? 'order-shipped' : 'Transisi status tidak valid.');
     }
 
-    public function cancel(Request $request, Order $order, OrderCancellationService $service): RedirectResponse
+    public function cancel(Request $request, Order $order, OrderCancellationService $service, \App\Services\CommissionService $commissionService): RedirectResponse
     {
         abort_unless($order->seller_profile_id === $request->user()->sellerProfile->id, 403);
 
         $result = $service->cancel($order);
+
+        if ($result === 'cancelled') {
+            $commissionService->cancelForOrder($order, 'order_cancelled_by_seller');
+        }
 
         return match ($result) {
             'cancelled' => back()->with('status', 'order-cancelled'),

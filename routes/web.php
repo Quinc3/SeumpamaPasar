@@ -68,8 +68,12 @@ Route::middleware('auth')->group(function () {
             // Business profile
     Route::get('/akun/bisnis', [\App\Http\Controllers\Buyer\BusinessProfileController::class, 'show'])->name('buyer.business.show');
     Route::post('/akun/bisnis', [\App\Http\Controllers\Buyer\BusinessProfileController::class, 'store'])->name('buyer.business.store');
+
+    Route::get('/akun/afiliasi', [\App\Http\Controllers\Buyer\AffiliateController::class, 'show'])->name('buyer.affiliate.show');
+    Route::post('/akun/afiliasi', [\App\Http\Controllers\Buyer\AffiliateController::class, 'activate'])->name('buyer.affiliate.activate');
 });
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/seller.php';
+require __DIR__.'/affiliate.php';

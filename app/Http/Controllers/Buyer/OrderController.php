@@ -31,11 +31,16 @@ class OrderController extends Controller
         return view('buyer.orders.show', compact('order'));
     }
 
-    public function complete(Request $request, Order $order, OrderStatusService $service): RedirectResponse
+    public function complete(Request $request, Order $order, OrderStatusService $service, \App\Services\CommissionService $commissionService): RedirectResponse
     {
         abort_unless($order->buyer_id === $request->user()->id, 403);
 
-        $ok = $service->transition($order, OrderStatus::Completed->value);
+        $ok = $service->transition($order, \App\Enums\OrderStatus::Completed->value);
+
+        if ($ok) {
+            $commissionService->awardForOrder($order->fresh());
+        }
+
         return back()->with($ok ? 'status' : 'error', $ok ? 'order-completed' : 'Transisi status tidak valid.');
     }
 }

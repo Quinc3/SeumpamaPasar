@@ -104,6 +104,16 @@
                     </span>
                     <x-icon name="chevron-right" size="sm" class="text-surface-400" />
                 </a>
+                <a href="{{ route('buyer.affiliate.show') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
+                    <span class="flex items-center gap-2">
+                        <x-icon name="arrow-path" size="sm" /> Afiliasi
+                        @php $aff = $user->affiliateProfile; @endphp
+@if ($aff)
+    <x-badge variant="primary">{{ $aff->referral_code }}</x-badge>
+@endif
+                    </span>
+                    <x-icon name="chevron-right" size="sm" class="text-surface-400" />
+                </a>
                 <a href="{{ route('catalog.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
                     <span class="flex items-center gap-2"><x-icon name="tag" size="sm" /> Jelajahi Katalog</span>
                     <x-icon name="chevron-right" size="sm" class="text-surface-400" />

@@ -103,6 +103,7 @@ class CheckoutService
 
             $total = (float) $checkout->orders()->sum('subtotal');
             $checkout->update(['total_amount' => round($total, 2)]);
+            app(\App\Services\AffiliateService::class)->recordReferral($checkout, $user);
 
             Payment::create([
                 'checkout_id' => $checkout->id,

@@ -56,6 +56,11 @@ class User extends Authenticatable
             && $this->businessProfile->verified_at !== null;
     }
 
+    public function affiliateProfile(): HasOne
+    {
+        return $this->hasOne(AffiliateProfile::class);
+    }
+
     public function businessProfile(): HasOne
     {
         return $this->hasOne(BusinessProfile::class);
