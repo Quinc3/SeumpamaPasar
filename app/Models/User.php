@@ -33,7 +33,20 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'account_type' => AccountType::class,
+            'member_since' => 'datetime',
         ];
+    }
+
+    public function isMember(): bool
+    {
+        return $this->member_since !== null;
+    }
+
+    public function activateMember(): void
+    {
+        if ($this->member_since === null) {
+            $this->forceFill(['member_since' => now()])->save();
+        }
     }
 
     public function businessProfile(): HasOne
