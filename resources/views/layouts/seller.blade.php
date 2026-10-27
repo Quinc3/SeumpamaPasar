@@ -7,37 +7,53 @@
     <title>@yield('title', 'Toko') — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-gray-50 font-sans antialiased">
-    <div class="flex min-h-screen">
-        <aside class="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col">
-            <div class="h-16 flex items-center px-6 border-b border-gray-200">
-                <a href="{{ route('seller.dashboard') }}" class="text-lg font-semibold text-gray-900">
-                    {{ config('app.name') }} <span class="text-xs font-normal text-gray-500">Toko</span>
-                </a>
+<body class="min-h-screen bg-surface-50 font-sans antialiased text-surface-900" x-data="{ sidebar: false }">
+    <div x-show="sidebar" x-on:click="sidebar = false" x-transition.opacity class="fixed inset-0 bg-black/40 z-40 md:hidden" style="display: none;" aria-hidden="true"></div>
+
+    <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-surface-200 flex flex-col transform transition-transform duration-200 -translate-x-full md:translate-x-0" :class="sidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
+        <div class="h-16 flex items-center justify-between px-4 border-b border-surface-200">
+            <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary-700 text-white font-bold">E</span>
+                <span class="text-sm font-semibold tracking-tight">Toko</span>
+            </a>
+            <button type="button" x-on:click="sidebar = false" class="p-1 -mr-1 rounded-md md:hidden" aria-label="Tutup menu">
+                <x-icon name="x-mark" size="md" class="text-surface-600" />
+            </button>
+        </div>
+
+        <x-sidebar-nav>
+            <x-nav-item href="{{ route('seller.dashboard') }}" icon="home" :active="request()->routeIs('seller.dashboard')">Dashboard</x-nav-item>
+            <x-nav-item href="#" icon="tag">Produk</x-nav-item>
+            <x-nav-item href="#" icon="truck">Pesanan</x-nav-item>
+            <x-nav-item href="#" icon="user-circle">Profil Toko</x-nav-item>
+        </x-sidebar-nav>
+
+        <div class="p-3 border-t border-surface-200">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full inline-flex items-center gap-2.5 px-3 py-2 text-sm text-surface-700 hover:bg-surface-100 rounded-md">
+                    <x-icon name="arrow-right" size="md" class="rotate-180 text-surface-500" />
+                    Keluar
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="md:pl-64">
+        <header class="sticky top-0 z-30 h-16 bg-white border-b border-surface-200 flex items-center px-4 sm:px-6 lg:px-8">
+            <button type="button" x-on:click="sidebar = true" class="p-2 -ml-2 mr-2 rounded-md md:hidden" aria-label="Buka menu">
+                <x-icon name="bars-3" size="lg" class="text-surface-700" />
+            </button>
+            <h1 class="text-base font-semibold text-surface-900 truncate">@yield('title', 'Toko')</h1>
+            <div class="ml-auto flex items-center gap-2">
+                @auth
+                    <x-user-menu />
+                @endauth
             </div>
-            <nav class="flex-1 px-3 py-4 space-y-1">
-                <a href="{{ route('seller.dashboard') }}"
-                   class="block px-3 py-2 text-sm rounded-md hover:bg-gray-100 {{ request()->routeIs('seller.dashboard') ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700' }}">
-                    Dashboard
-                </a>
-            </nav>
-            <div class="p-3 border-t border-gray-200">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full text-left px-3 py-2 text-sm rounded-md text-gray-700 hover:bg-gray-100">
-                        Keluar
-                    </button>
-                </form>
-            </div>
-        </aside>
-        <main class="flex-1 flex flex-col min-w-0">
-            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-                <h1 class="text-base font-semibold text-gray-900">@yield('title', 'Toko')</h1>
-                <span class="text-sm text-gray-600">{{ auth()->user()->name ?? '' }}</span>
-            </header>
-            <div class="p-6 space-y-4">
-                @yield('content')
-            </div>
+        </header>
+
+        <main class="p-4 sm:p-6 lg:p-8 space-y-6">
+            @yield('content')
         </main>
     </div>
 </body>

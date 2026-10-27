@@ -1,36 +1,63 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', config('app.name')) — {{ config('app.name') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased text-surface-900">
+    <header class="sticky top-0 z-30 bg-white border-b border-surface-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="h-16 flex items-center gap-2 sm:gap-4">
+                <a href="{{ url('/') }}" class="flex items-center gap-2 shrink-0">
+                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary-700 text-white font-bold">E</span>
+                    <span class="hidden sm:block text-base font-semibold tracking-tight">{{ config('app.name') }}</span>
+                </a>
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+                <nav class="hidden md:flex items-center gap-1 text-sm ml-4">
+                    <a href="{{ url('/') }}" class="px-3 py-2 rounded-md hover:bg-surface-100 {{ request()->is('/') ? 'text-primary-700 font-semibold' : 'text-surface-700' }}">Beranda</a>
+                    <a href="#" class="px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700">Katalog</a>
+                    <a href="#" class="px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700">Layanan Digital</a>
+                </nav>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+                <div class="flex-1"></div>
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+                <div class="flex items-center gap-1">
+                    <button type="button" class="p-2 rounded-md hover:bg-surface-100" aria-label="Cari">
+                        <x-icon name="magnifying-glass" size="md" class="text-surface-700" />
+                    </button>
+                    <a href="#" class="p-2 rounded-md hover:bg-surface-100" aria-label="Keranjang">
+                        <x-icon name="shopping-cart" size="md" class="text-surface-700" />
+                    </a>
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
-
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+                    @auth
+                        <x-user-menu />
+                    @else
+                        <a href="{{ route('login') }}" class="hidden sm:inline-flex px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100 rounded-md">Masuk</a>
+                        <a href="{{ route('register') }}" class="inline-flex px-3 py-2 text-sm font-semibold text-white bg-primary-700 hover:bg-primary-800 rounded-md">Daftar</a>
+                    @endauth
+                </div>
+            </div>
         </div>
-    </body>
+    </header>
+
+    <main class="pb-20 md:pb-8">
+        @if (isset($header))
+            {{ $header }}
+        @endif
+        @hasSection('header')
+            @yield('header')
+        @endif
+
+        @if (isset($slot))
+            {{ $slot }}
+        @else
+            @yield('content')
+        @endif
+    </main>
+
+    <x-bottom-nav class="md:hidden" />
+</body>
 </html>
