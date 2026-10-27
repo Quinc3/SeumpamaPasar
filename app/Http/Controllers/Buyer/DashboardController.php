@@ -15,7 +15,6 @@ class DashboardController extends Controller
         return view('buyer.dashboard', [
             'user' => $user,
             'orderCount' => $user->orders()->count(),
-            'digitalTransactionCount' => $user->digitalTransactions()->count(),
             'addressCount' => $user->addresses()->count(),
         ]);
     }

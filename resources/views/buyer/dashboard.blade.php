@@ -55,14 +55,10 @@
             </x-card>
         @endunless
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <x-card>
                 <div class="text-sm text-surface-600">Pesanan</div>
                 <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $orderCount }}</div>
-            </x-card>
-            <x-card>
-                <div class="text-sm text-surface-600">Transaksi Digital</div>
-                <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $digitalTransactionCount }}</div>
             </x-card>
             <x-card>
                 <div class="text-sm text-surface-600">Alamat</div>

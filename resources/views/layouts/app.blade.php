@@ -17,10 +17,9 @@
                 </a>
 
                 <nav class="hidden md:flex items-center gap-1 text-sm ml-4">
-                    <a href="{{ url('/') }}" class="px-3 py-2 rounded-md hover:bg-surface-100 {{ request()->is('/') ? 'text-primary-700 font-semibold' : 'text-surface-700' }}">Beranda</a>
-                    <a href="#" class="px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700">Katalog</a>
-                    <a href="#" class="px-3 py-2 rounded-md hover:bg-surface-100 text-surface-700">Layanan Digital</a>
-                </nav>
+    <a href="{{ url('/') }}" class="px-3 py-2 rounded-md hover:bg-surface-100 {{ request()->is('/') ? 'text-primary-700 font-semibold' : 'text-surface-700' }}">Beranda</a>
+    <a href="{{ route('catalog.index') }}" class="px-3 py-2 rounded-md hover:bg-surface-100 {{ request()->routeIs('catalog.*') ? 'text-primary-700 font-semibold' : 'text-surface-700' }}">Katalog</a>
+</nav>
 
                 <div class="flex-1"></div>
 
@@ -28,9 +27,19 @@
                     <button type="button" class="p-2 rounded-md hover:bg-surface-100" aria-label="Cari">
                         <x-icon name="magnifying-glass" size="md" class="text-surface-700" />
                     </button>
-                    <a href="#" class="p-2 rounded-md hover:bg-surface-100" aria-label="Keranjang">
-                        <x-icon name="shopping-cart" size="md" class="text-surface-700" />
-                    </a>
+                    @auth
+    @php $cartCount = auth()->user()->cartItems()->sum('quantity'); @endphp
+    <a href="{{ route('cart.index') }}" class="relative p-2 rounded-md hover:bg-surface-100" aria-label="Keranjang">
+        <x-icon name="shopping-cart" size="md" class="text-surface-700" />
+        @if ($cartCount > 0)
+            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary-700 text-white text-[10px] font-semibold flex items-center justify-center">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
+        @endif
+    </a>
+@else
+    <a href="{{ route('login') }}" class="p-2 rounded-md hover:bg-surface-100" aria-label="Keranjang">
+        <x-icon name="shopping-cart" size="md" class="text-surface-700" />
+    </a>
+@endauth
 
                     @auth
                         <x-user-menu />
