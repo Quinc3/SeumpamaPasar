@@ -17,6 +17,8 @@ use RuntimeException;
 
 class CheckoutService
 {
+    public function __construct(private PriceResolver $priceResolver) {}
+
     public function createFromCart(User $user, Address $address): Checkout
     {
         return DB::transaction(function () use ($user, $address) {
@@ -33,12 +35,20 @@ class CheckoutService
             foreach ($items as $item) {
                 $p = $item->product;
                 if (! $p
-    || $p->status !== \App\Enums\ProductStatus::Active
-    || $p->sellerProfile->status !== \App\Enums\SellerStatus::Active) {
-                    throw new RuntimeException("Produk '{$item->product->name}' tidak lagi tersedia.");
+                    || $p->status !== \App\Enums\ProductStatus::Active
+                    || $p->sellerProfile->status !== \App\Enums\SellerStatus::Active) {
+                    throw new RuntimeException("Produk '{$item->product?->name}' tidak lagi tersedia.");
+                }
+                if (! $this->priceResolver->canBuy($user, $p)) {
+                    throw new RuntimeException("Produk '{$p->name}' hanya tersedia untuk pembeli bisnis terverifikasi.");
                 }
                 if ($p->stock < $item->quantity) {
                     throw new RuntimeException("Stok '{$p->name}' tidak mencukupi.");
+                }
+
+                $resolved = $this->priceResolver->resolve($user, $p, $item->quantity);
+                if ($item->quantity < $resolved['min_qty']) {
+                    throw new RuntimeException("Jumlah minimum pembelian untuk '{$p->name}' adalah {$resolved['min_qty']}.");
                 }
             }
 
@@ -70,8 +80,11 @@ class CheckoutService
                 ]);
 
                 foreach ($sellerItems as $item) {
-                    $basePrice = (float) $item->product->price;
-                    $unitPrice = $isMember ? round($basePrice * 0.95, 2) : $basePrice;
+                    $resolved = $this->priceResolver->resolve($user, $item->product, $item->quantity);
+                    $unitPrice = $resolved['unit_price'];
+                    if ($isMember) {
+                        $unitPrice = round($unitPrice * 0.95, 2);
+                    }
                     $lineTotal = round($unitPrice * $item->quantity, 2);
 
                     $order->items()->create([
@@ -95,7 +108,7 @@ class CheckoutService
                 'checkout_id' => $checkout->id,
                 'method' => 'demo_transfer',
                 'status' => PaymentStatus::Pending,
-                'reference' => 'PAY-'.strtoupper(Str::random(12)),
+                'reference' => 'PAY-'.strtoupper(\Illuminate\Support\Str::random(12)),
             ]);
 
             CartItem::where('user_id', $user->id)->delete();

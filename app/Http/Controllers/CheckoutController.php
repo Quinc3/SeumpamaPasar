@@ -13,7 +13,7 @@ use RuntimeException;
 
 class CheckoutController extends Controller
 {
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request, \App\Services\PriceResolver $priceResolver): View|RedirectResponse
     {
         $user = $request->user();
         $items = $user->cartItems()->with(['product.sellerProfile'])->get();
@@ -25,10 +25,27 @@ class CheckoutController extends Controller
         $addresses = $user->addresses()->orderByDesc('is_default')->orderByDesc('id')->get();
         $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
 
-        $baseSubtotal = $items->sum(fn ($i) => (float) $i->product->price * $i->quantity);
         $isMember = $user->isMember();
-        $discount = $isMember ? round($baseSubtotal * 0.05, 2) : 0;
-        $total = round($baseSubtotal - $discount, 2);
+
+        // Hitung per item dengan resolver
+        $lineItems = $items->map(function ($item) use ($user, $priceResolver, $isMember) {
+            $resolved = $priceResolver->resolve($user, $item->product, $item->quantity);
+            $unitPrice = $resolved['unit_price'];
+            if ($isMember) {
+                $unitPrice = round($unitPrice * 0.95, 2);
+            }
+            $lineTotal = round($unitPrice * $item->quantity, 2);
+
+            return [
+                'cart_item' => $item,
+                'unit_price' => $unitPrice,
+                'line_total' => $lineTotal,
+                'min_qty' => $resolved['min_qty'],
+                'applies_tier' => $resolved['applies_tier'],
+            ];
+        });
+
+        $baseSubtotal = $lineItems->sum(fn ($li) => $li['line_total']);
 
         $methods = [
             'demo_transfer' => 'Transfer Bank (Demo)',
@@ -36,7 +53,17 @@ class CheckoutController extends Controller
             'demo_va' => 'Virtual Account (Demo)',
         ];
 
-        return view('checkout.index', compact('items', 'addresses', 'defaultAddress', 'baseSubtotal', 'isMember', 'discount', 'total', 'methods'));
+        return view('checkout.index', [
+            'items' => $items,
+            'lineItems' => $lineItems,
+            'addresses' => $addresses,
+            'defaultAddress' => $defaultAddress,
+            'baseSubtotal' => $baseSubtotal,
+            'isMember' => $isMember,
+            'discount' => 0, // diskon sudah masuk per unit_price di lineItems
+            'total' => $baseSubtotal,
+            'methods' => $methods,
+        ]);
     }
 
     public function store(Request $request, CheckoutService $service): RedirectResponse

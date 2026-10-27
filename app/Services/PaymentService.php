@@ -15,6 +15,8 @@ use RuntimeException;
 
 class PaymentService
 {
+    public function __construct(private PriceResolver $priceResolver) {}
+
     /**
      * @return string 'success' | 'failed' | 'already_processed'
      */
@@ -64,11 +66,15 @@ class PaymentService
                 if ($product->sellerProfile->status !== \App\Enums\SellerStatus::Active) {
                     throw new RuntimeException('seller_inactive');
                 }
+                if (! $this->priceResolver->canBuy($buyer, $product)) {
+                    throw new RuntimeException('buyer_not_eligible');
+                }
                 if ($product->stock < $item->quantity) {
                     throw new RuntimeException('insufficient_stock');
                 }
 
-                $expected = (float) $product->price;
+                $resolved = $this->priceResolver->resolve($buyer, $product, $item->quantity);
+                $expected = $resolved['unit_price'];
                 if ($isMember) {
                     $expected = round($expected * 0.95, 2);
                 }
@@ -141,7 +147,14 @@ class PaymentService
 
     private function mapReason(\Throwable $e): string
     {
-        $known = ['insufficient_stock', 'price_changed', 'product_inactive', 'seller_inactive', 'order_status_changed'];
+        $known = [
+            'insufficient_stock',
+            'price_changed',
+            'product_inactive',
+            'seller_inactive',
+            'buyer_not_eligible',
+            'order_status_changed',
+        ];
         return in_array($e->getMessage(), $known, true) ? $e->getMessage() : 'checkout_validation_failed';
     }
 }

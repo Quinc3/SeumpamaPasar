@@ -13,16 +13,33 @@ class CartController extends Controller
 {
     public function __construct(private CartService $cart) {}
 
-    public function index(Request $request): View
+    public function index(Request $request, \App\Services\PriceResolver $priceResolver): View
     {
-        $items = $request->user()
-            ->cartItems()
+        $user = $request->user();
+        $items = $user->cartItems()
             ->with(['product.sellerProfile', 'product.images'])
             ->get();
 
-        $subtotal = $items->sum(fn ($i) => (float) $i->product->price * $i->quantity);
+        $isMember = $user->isMember();
 
-        return view('cart.index', compact('items', 'subtotal'));
+        $lineItems = $items->map(function ($item) use ($user, $priceResolver, $isMember) {
+            $resolved = $priceResolver->resolve($user, $item->product, $item->quantity);
+            $unitPrice = $resolved['unit_price'];
+            if ($isMember) {
+                $unitPrice = round($unitPrice * 0.95, 2);
+            }
+            return [
+                'cart_item' => $item,
+                'unit_price' => $unitPrice,
+                'line_total' => round($unitPrice * $item->quantity, 2),
+                'applies_tier' => $resolved['applies_tier'],
+                'min_qty' => $resolved['min_qty'],
+            ];
+        });
+
+        $subtotal = $lineItems->sum(fn ($li) => $li['line_total']);
+
+        return view('cart.index', compact('items', 'lineItems', 'subtotal', 'isMember'));
     }
 
     public function add(Request $request, Product $product): RedirectResponse

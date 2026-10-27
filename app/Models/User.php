@@ -49,6 +49,13 @@ class User extends Authenticatable
         }
     }
 
+    public function isVerifiedBusiness(): bool
+    {
+        return $this->account_type === \App\Enums\AccountType::Business
+            && $this->businessProfile !== null
+            && $this->businessProfile->verified_at !== null;
+    }
+
     public function businessProfile(): HasOne
     {
         return $this->hasOne(BusinessProfile::class);

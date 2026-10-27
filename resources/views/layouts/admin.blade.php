@@ -27,6 +27,7 @@
             <x-nav-item href="#" icon="check-circle">Moderasi Produk</x-nav-item>
             <x-nav-item href="#" icon="truck">Pesanan</x-nav-item>
             <x-nav-item href="#" icon="user-circle">Pengguna</x-nav-item>
+            <x-nav-item href="{{ route('admin.business.index') }}" icon="check-circle" :active="request()->routeIs('admin.business.*')">Verifikasi Bisnis</x-nav-item>
             <x-nav-item href="#" icon="arrow-path">Afiliasi</x-nav-item>
             <x-nav-item href="#" icon="banknotes">Laporan</x-nav-item>
         </x-sidebar-nav>

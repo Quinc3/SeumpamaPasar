@@ -10,6 +10,7 @@
             <x-alert variant="success">Selamat! Akun Anda sekarang aktif sebagai Member.</x-alert>
         @endif
 
+        {{-- Kartu profil --}}
         <div class="bg-white border border-surface-200 rounded-lg shadow-card p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="flex items-center gap-4">
                 <x-avatar :name="$user->name" size="lg" />
@@ -18,6 +19,9 @@
                         {{ $user->name }}
                         @if ($user->isMember())
                             <x-badge variant="primary">Member</x-badge>
+                        @endif
+                        @if ($user->isVerifiedBusiness())
+                            <x-badge variant="success">Bisnis</x-badge>
                         @endif
                     </h2>
                     <p class="text-sm text-surface-600">{{ $user->email }}</p>
@@ -41,6 +45,7 @@
             @endunless
         </div>
 
+        {{-- Benefit member --}}
         @unless ($user->isMember())
             <x-card>
                 <div class="flex items-start gap-3">
@@ -55,42 +60,59 @@
             </x-card>
         @endunless
 
+        {{-- Statistik --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <a href="{{ route('buyer.orders.index') }}" class="block">
-    <x-card class="hover:shadow-card-hover transition">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="text-sm text-surface-600">Pesanan</div>
-                <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $orderCount }}</div>
-            </div>
-            <x-icon name="chevron-right" size="md" class="text-surface-400" />
-        </div>
-    </x-card>
-</a>
-            <x-card>
-                <div class="text-sm text-surface-600">Alamat</div>
-                <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $addressCount }}</div>
-            </x-card>
+            <a href="{{ route('buyer.orders.index') }}" class="block">
+                <x-card class="hover:shadow-card-hover transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-surface-600">Pesanan</div>
+                            <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $orderCount }}</div>
+                        </div>
+                        <x-icon name="chevron-right" size="md" class="text-surface-400" />
+                    </div>
+                </x-card>
+            </a>
+            <a href="{{ route('addresses.index') }}" class="block">
+                <x-card class="hover:shadow-card-hover transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-surface-600">Alamat</div>
+                            <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $addressCount }}</div>
+                        </div>
+                        <x-icon name="chevron-right" size="md" class="text-surface-400" />
+                    </div>
+                </x-card>
+            </a>
         </div>
 
+        {{-- Menu --}}
         <x-card>
-    <a href="{{ route('addresses.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700">
-        <span class="flex items-center gap-2"><x-icon name="home" size="sm" /> Alamat Pengiriman</span>
-        <span class="text-surface-400">›</span>
-    </a>
-</x-card>
-
-<x-card>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <a href="{{ route('catalog.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
-            <span class="flex items-center gap-2"><x-icon name="tag" size="sm" /> Jelajahi Katalog</span>
-            <span class="text-surface-400">›</span>
-        </a>
-        <a href="{{ route('cart.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
-            <span class="flex items-center gap-2"><x-icon name="shopping-cart" size="sm" /> Keranjang Saya</span>
-            <span class="text-surface-400">›</span>
-        </a>
-    </div>
-</x-card>
+            <div class="space-y-1">
+                <a href="{{ route('addresses.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
+                    <span class="flex items-center gap-2"><x-icon name="home" size="sm" /> Alamat Pengiriman</span>
+                    <x-icon name="chevron-right" size="sm" class="text-surface-400" />
+                </a>
+                <a href="{{ route('buyer.business.show') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
+                    <span class="flex items-center gap-2">
+                        <x-icon name="credit-card" size="sm" /> Profil Bisnis
+                        @if ($user->isVerifiedBusiness())
+                            <x-badge variant="success">Terverifikasi</x-badge>
+                        @elseif ($user->businessProfile)
+                            <x-badge variant="warning">Menunggu</x-badge>
+                        @endif
+                    </span>
+                    <x-icon name="chevron-right" size="sm" class="text-surface-400" />
+                </a>
+                <a href="{{ route('catalog.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
+                    <span class="flex items-center gap-2"><x-icon name="tag" size="sm" /> Jelajahi Katalog</span>
+                    <x-icon name="chevron-right" size="sm" class="text-surface-400" />
+                </a>
+                <a href="{{ route('cart.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
+                    <span class="flex items-center gap-2"><x-icon name="shopping-cart" size="sm" /> Keranjang Saya</span>
+                    <x-icon name="chevron-right" size="sm" class="text-surface-400" />
+                </a>
+            </div>
+        </x-card>
     </div>
 @endsection

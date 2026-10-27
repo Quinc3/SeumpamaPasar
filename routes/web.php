@@ -64,6 +64,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/akun/pesanan', [\App\Http\Controllers\Buyer\OrderController::class, 'index'])->name('buyer.orders.index');
         Route::get('/akun/pesanan/{order}', [\App\Http\Controllers\Buyer\OrderController::class, 'show'])->name('buyer.orders.show');
         Route::post('/akun/pesanan/{order}/selesai', [\App\Http\Controllers\Buyer\OrderController::class, 'complete'])->name('buyer.orders.complete');
+
+            // Business profile
+    Route::get('/akun/bisnis', [\App\Http\Controllers\Buyer\BusinessProfileController::class, 'show'])->name('buyer.business.show');
+    Route::post('/akun/bisnis', [\App\Http\Controllers\Buyer\BusinessProfileController::class, 'store'])->name('buyer.business.store');
 });
 
 require __DIR__.'/auth.php';

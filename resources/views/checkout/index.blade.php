@@ -56,21 +56,20 @@
             </div>
 
             <div class="space-y-4">
-                <x-card>
+            <x-card>
                     <h2 class="text-sm font-semibold text-surface-900 mb-3">Ringkasan</h2>
-                    <div class="space-y-1 text-sm">
-                        @foreach ($items as $item)
+                    <div class="space-y-2 text-sm">
+                        @foreach ($lineItems as $li)
                             <div class="flex justify-between gap-2">
-                                <span class="text-surface-700 truncate">{{ $item->product->name }} ×{{ $item->quantity }}</span>
-                                <x-price :amount="$item->product->price * $item->quantity" class="text-sm shrink-0" />
+                                <div class="min-w-0">
+                                    <span class="text-surface-700 block truncate">{{ $li['cart_item']->product->name }} ×{{ $li['cart_item']->quantity }}</span>
+                                    @if ($li['applies_tier'])
+                                        <span class="text-xs text-primary-700">Harga grosir · Rp {{ number_format($li['unit_price'], 0, ',', '.') }}/pcs</span>
+                                    @endif
+                                </div>
+                                <x-price :amount="$li['line_total']" class="text-sm shrink-0" />
                             </div>
                         @endforeach
-                    </div>
-                    <div class="border-t border-surface-200 mt-3 pt-3 space-y-1 text-sm">
-                        <div class="flex justify-between"><span class="text-surface-600">Subtotal</span><x-price :amount="$baseSubtotal" class="text-sm" /></div>
-                        @if ($isMember && $discount > 0)
-                            <div class="flex justify-between text-green-700"><span>Diskon Member (5%)</span><span>−Rp {{ number_format($discount, 0, ',', '.') }}</span></div>
-                        @endif
                     </div>
                     <div class="border-t border-surface-200 mt-3 pt-3 flex justify-between items-baseline">
                         <span class="text-sm font-semibold text-surface-900">Total</span>
