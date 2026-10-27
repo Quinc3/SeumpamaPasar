@@ -59,12 +59,19 @@
             <x-card>
                     <h2 class="text-sm font-semibold text-surface-900 mb-3">Ringkasan</h2>
                     <div class="space-y-2 text-sm">
-                        @foreach ($lineItems as $li)
+                    @foreach ($lineItems as $li)
                             <div class="flex justify-between gap-2">
                                 <div class="min-w-0">
                                     <span class="text-surface-700 block truncate">{{ $li['cart_item']->product->name }} ×{{ $li['cart_item']->quantity }}</span>
                                     @if ($li['applies_tier'])
-                                        <span class="text-xs text-primary-700">Harga grosir · Rp {{ number_format($li['unit_price'], 0, ',', '.') }}/pcs</span>
+                                        <span class="text-xs text-primary-700">
+                                            Harga grosir Rp {{ number_format($li['unit_price'] / ($isMember ? 0.95 : 1), 0, ',', '.') }}/pcs
+                                            @if ($isMember)
+                                                · Member 5% → Rp {{ number_format($li['unit_price'], 0, ',', '.') }}
+                                            @endif
+                                        </span>
+                                    @elseif ($isMember)
+                                        <span class="text-xs text-green-700">Diskon Member 5% · Rp {{ number_format($li['unit_price'], 0, ',', '.') }}/pcs</span>
                                     @endif
                                 </div>
                                 <x-price :amount="$li['line_total']" class="text-sm shrink-0" />
