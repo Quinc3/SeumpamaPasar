@@ -15,15 +15,16 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('h
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/produk/{product:slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
-Route::get('/dashboard', [\App\Http\Controllers\HubController::class, 'index'])
+Route::get('/dashboard', fn () => redirect()->route('profile.show'))
     ->middleware(['auth'])->name('dashboard');
 
-    Route::get('/akun', [\App\Http\Controllers\HubController::class, 'index'])
+    Route::get('/akun', fn () => redirect()->route('profile.show'))
     ->middleware(['auth'])->name('buyer.dashboard');
 
 Route::middleware('auth')->group(function () {
     // Profile
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

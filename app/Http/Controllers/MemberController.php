@@ -12,7 +12,7 @@ class MemberController extends Controller
         $request->user()->activateMember();
 
         return redirect()
-            ->route('buyer.dashboard')
-            ->with('status', 'member-activated');
+        ->route('profile.show')
+        ->with('status', 'member-activated');
     }
 }

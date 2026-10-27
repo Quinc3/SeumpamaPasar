@@ -13,41 +13,12 @@
         $cartCount = $u ? $u->cartItems()->sum('quantity') : 0;
     @endphp
 
-    {{-- Header --}}
     <header class="sticky top-0 z-30 bg-primary-700 text-white">
-        {{-- Top strip: disclaimer + badges (informasi, bukan navigasi) --}}
-        <div class="flex items-center gap-1.5 text-white/80" title="Mode Simulasi — semua transaksi bersifat simulasi akademik.">
-                    <x-icon name="exclamation-triangle" size="sm" />
-                    <span class="text-[11px] font-medium">Simulasi</span>
-                </div>
-                @auth
-                    <div class="hidden sm:flex items-center gap-1.5">
-                        @if ($u->isMember())
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-medium">
-                                <x-icon name="check-circle" size="xs" /> Member
-                            </span>
-                        @endif
-                        @if ($u->isVerifiedBusiness())
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-medium">
-                                <x-icon name="credit-card" size="xs" /> Bisnis
-                            </span>
-                        @endif
-                        @if ($u->role === \App\Enums\UserRole::Admin)
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/30 text-white text-[10px] font-medium">
-                                <x-icon name="exclamation-triangle" size="xs" /> Admin
-                            </span>
-                        @endif
-                    </div>
-                @endauth
-            </div>
-        </div>
-
-        {{-- Main header: search + actions --}}
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div class="flex items-center gap-3 sm:gap-4">
                 <a href="{{ url('/') }}" class="flex items-center gap-2 shrink-0">
-                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white text-primary-700 font-bold">E</span>
-                    <span class="hidden sm:block text-lg font-semibold tracking-tight">E-Commerce</span>
+                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white text-primary-700 font-bold text-sm">SP</span>
+                    <span class="hidden sm:block text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
                 </a>
 
                 <form method="GET" action="{{ route('catalog.index') }}" class="flex-1">
@@ -62,34 +33,6 @@
                 </form>
 
                 <div class="flex items-center gap-1">
-                    {{-- Aksi cepat untuk kapabilitas user --}}
-                    @auth
-                    @if ($u->sellerProfile && $u->sellerProfile->status === \App\Enums\SellerStatus::Active)
-                            <a href="{{ route('seller.dashboard') }}"
-                               class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-2 rounded-md hover:bg-white/10 text-sm font-medium"
-                               title="Toko Saya">
-                                <x-icon name="home" size="md" />
-                                <span class="hidden lg:inline">Toko</span>
-                            </a>
-                        @endif
-                        @if ($u->affiliateProfile)
-                            <a href="{{ route('affiliate.dashboard') }}"
-                               class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-2 rounded-md hover:bg-white/10 text-sm font-medium"
-                               title="Afiliasi">
-                                <x-icon name="arrow-path" size="md" />
-                                <span class="hidden lg:inline">Afiliasi</span>
-                            </a>
-                        @endif
-                        @if ($u->role === \App\Enums\UserRole::Admin)
-                            <a href="{{ route('admin.dashboard') }}"
-                               class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-2 rounded-md hover:bg-amber-500/20 text-sm font-medium"
-                               title="Admin Panel">
-                                <x-icon name="check-circle" size="md" />
-                                <span class="hidden lg:inline">Admin</span>
-                            </a>
-                        @endif
-                    @endauth
-
                     <a href="{{ $u ? route('cart.index') : route('login') }}" class="relative p-2 rounded-md hover:bg-white/10" aria-label="Keranjang">
                         <x-icon name="shopping-cart" size="lg" />
                         @if ($cartCount > 0)
@@ -108,7 +51,6 @@
         </div>
     </header>
 
-    {{-- Sub-nav workspace --}}
     @auth
         @if (request()->routeIs('seller.*'))
             <x-workspace-nav workspace="toko" />
@@ -134,7 +76,6 @@
 
     <x-bottom-nav class="md:hidden" />
 
-    {{-- Toast global --}}
     <div x-data="{ show: false, msg: '' }"
          x-on:show-toast.window="msg = $event.detail; show = true; setTimeout(() => show = false, 2000)"
          x-show="show" x-transition

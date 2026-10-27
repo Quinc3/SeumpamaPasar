@@ -4,7 +4,7 @@
     if ($slides === null) {
         $slides = [
             [
-                'eyebrow' => 'Integrated E-Commerce',
+                'eyebrow' => 'Seumpama Pasar',
                 'title' => 'Belanja retail & grosir dalam satu platform',
                 'subtitle' => 'Harga retail untuk semua pembeli, harga grosir untuk bisnis terverifikasi. Plus diskon member 5% & komisi afiliasi.',
                 'cta' => ['label' => 'Jelajahi Katalog', 'route' => route('catalog.index'), 'icon' => 'shopping-cart'],

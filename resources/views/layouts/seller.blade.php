@@ -12,10 +12,10 @@
 
     <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-surface-200 flex flex-col transform transition-transform duration-200 -translate-x-full md:translate-x-0" :class="sidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
         <div class="h-16 flex items-center justify-between px-4 border-b border-surface-200">
-            <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2">
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary-700 text-white font-bold">E</span>
-                <span class="text-sm font-semibold tracking-tight">Toko</span>
-            </a>
+        <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2">
+    <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary-700 text-white font-bold text-xs">SP</span>
+    <span class="text-sm font-semibold tracking-tight">Toko</span>
+</a>
             <button type="button" x-on:click="sidebar = false" class="p-1 -mr-1 rounded-md md:hidden" aria-label="Tutup menu">
                 <x-icon name="x-mark" size="md" class="text-surface-600" />
             </button>

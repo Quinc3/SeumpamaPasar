@@ -3,7 +3,7 @@
         ['href' => url('/'),               'label' => 'Beranda',    'icon' => 'home',          'active' => request()->is('/')],
         ['href' => route('catalog.index'), 'label' => 'Katalog',    'icon' => 'tag',           'active' => request()->routeIs('catalog.*')],
         ['href' => auth()->check() ? route('cart.index') : route('login'), 'label' => 'Keranjang', 'icon' => 'shopping-cart', 'active' => request()->routeIs('cart.*')],
-        ['href' => auth()->check() ? route('buyer.dashboard') : route('login'), 'label' => 'Akun', 'icon' => 'user', 'active' => request()->is('akun*') || request()->is('profile*')],
+        ['href' => auth()->check() ? route('profile.show') : route('login'), 'label' => 'Profil', 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
     ];
 @endphp
 

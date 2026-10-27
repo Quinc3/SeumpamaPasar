@@ -9,11 +9,10 @@
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased text-surface-900">
     <div class="min-h-screen flex flex-col items-center justify-center px-4 py-10">
-        <a href="{{ url('/') }}" class="mb-6 inline-flex items-center gap-2">
-            <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary-700 text-white font-bold">E</span>
-            <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
-        </a>
-
+    <a href="{{ url('/') }}" class="mb-6 inline-flex items-center gap-2">
+    <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary-700 text-white font-bold text-sm">SP</span>
+    <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
+</a>
         <div class="w-full max-w-md bg-white border border-surface-200 rounded-lg shadow-card p-6 sm:p-8">
             @if (isset($slot))
                 {{ $slot }}

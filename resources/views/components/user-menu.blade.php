@@ -6,38 +6,42 @@
         <x-icon name="chevron-down" size="sm" class="hidden sm:block" />
     </button>
 
-    <div x-show="open" x-transition.origin.top.right class="absolute right-0 mt-2 w-60 bg-white text-surface-900 border border-surface-200 rounded-md shadow-dropdown z-40" style="display: none;" role="menu">
+    <div x-show="open" x-transition.origin.top.right class="absolute right-0 mt-2 w-64 bg-white text-surface-900 border border-surface-200 rounded-md shadow-dropdown z-40" style="display: none;" role="menu">
         <div class="px-4 py-3 border-b border-surface-200">
             <div class="text-sm font-semibold text-surface-900 truncate">{{ $user->name }}</div>
             <div class="text-xs text-surface-500 truncate">{{ $user->email }}</div>
+            <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+                @if ($user->isMember()) <x-badge variant="primary">Member</x-badge> @endif
+                @if ($user->isVerifiedBusiness()) <x-badge variant="success">Bisnis</x-badge> @endif
+                @if ($user->role === \App\Enums\UserRole::Admin) <x-badge variant="warning">Admin</x-badge> @endif
+            </div>
         </div>
+
         <div class="py-1">
-            <a href="{{ route('buyer.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
-                <x-icon name="user" size="sm" class="text-surface-500" /> Akun Saya
+            <a href="{{ route('profile.show') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                <x-icon name="user" size="sm" class="text-surface-500" /> Profil Saya
             </a>
             @if ($user->sellerProfile && $user->sellerProfile->status === \App\Enums\SellerStatus::Active)
-                <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
-                    <x-icon name="tag" size="sm" class="text-surface-500" /> Toko Saya
+                <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                    <x-icon name="home" size="sm" class="text-surface-500" /> Toko Saya
                 </a>
             @endif
             @if ($user->affiliateProfile)
-                <a href="{{ route('affiliate.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                <a href="{{ route('affiliate.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
                     <x-icon name="arrow-path" size="sm" class="text-surface-500" /> Afiliasi
                 </a>
             @endif
             @if ($user->role === \App\Enums\UserRole::Admin)
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
                     <x-icon name="check-circle" size="sm" class="text-surface-500" /> Admin Panel
                 </a>
             @endif
-            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
-                <x-icon name="pencil-square" size="sm" class="text-surface-500" /> Profil
-            </a>
         </div>
+
         <div class="border-t border-surface-200 py-1">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                <button type="submit" class="w-full text-left flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
                     <x-icon name="arrow-right" size="sm" class="rotate-180 text-surface-500" /> Keluar
                 </button>
             </form>

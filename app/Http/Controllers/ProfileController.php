@@ -14,6 +14,27 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
+
+    public function show(Request $request): \Illuminate\Contracts\View\View
+    {
+        $user = $request->user();
+
+        return view('profile.show', [
+            'user' => $user,
+            'orderCount' => $user->orders()->count(),
+            'addressCount' => $user->addresses()->count(),
+            'cartCount' => $user->cartItems()->count(),
+            'affiliate' => $user->affiliateProfile,
+            'sellerProfile' => $user->sellerProfile,
+            'businessProfile' => $user->businessProfile,
+            'commissionTotal' => $user->affiliateProfile
+                ? (float) $user->affiliateProfile->commissions()
+                    ->where('status', \App\Enums\CommissionStatus::Approved->value)
+                    ->sum('amount')
+                : 0,
+        ]);
+    }
+
     public function edit(Request $request): View
     {
         return view('profile.edit', [

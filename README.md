@@ -1,4 +1,4 @@
-# Integrated E-Commerce Platform
+# Seumpama Pasar
 
 Aplikasi e-commerce akademik dengan **2 jenis perdagangan** (B2C, B2B) dan **3 model bisnis** (Member, Affiliate, Seller). Semua transaksi bersifat simulasi — tidak ada uang sungguhan, payment gateway, atau API eksternal.
 
