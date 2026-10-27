@@ -10,9 +10,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/produk/{product:slug}', [CatalogController::class, 'show'])->name('catalog.show');

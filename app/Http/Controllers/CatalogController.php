@@ -35,6 +35,7 @@ class CatalogController extends Controller
         match ($sort) {
             'termurah' => $query->orderBy('price'),
             'termahal' => $query->orderByDesc('price'),
+            'terlaris' => $query->orderByDesc('sold_count'),
             default    => $query->orderByDesc('created_at'),
         };
 

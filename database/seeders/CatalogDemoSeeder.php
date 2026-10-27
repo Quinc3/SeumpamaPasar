@@ -36,15 +36,21 @@ class CatalogDemoSeeder extends Seeder
     private function seedB2C(SellerProfile $seller): void
     {
         $products = [
-            ['Elektronik', 'Headphone Wireless', 450000, 25, 'Headphone bluetooth dengan noise cancelling dan baterai 30 jam.'],
-            ['Elektronik', 'Power Bank 10.000mAh', 180000, 40, 'Power bank tipis dengan fast charging 20W.'],
-            ['Fashion', 'Kaos Katun Premium', 85000, 100, 'Kaos katun combed 30s, nyaman untuk harian.'],
-            ['Fashion', 'Tote Bag Kanvas', 120000, 60, 'Tas kanvas kokoh, cocok untuk kuliah dan kerja.'],
-            ['Rumah Tangga', 'Lampu Meja LED', 95000, 30, 'Lampu meja dengan 3 mode pencahayaan dan USB charging.'],
-            ['Buku & Alat Tulis', 'Notebook A5 Hardcover', 55000, 80, 'Notebook 200 halaman dengan hardcover tahan lama.'],
+            ['Elektronik', 'Headphone Wireless', 450000, 25, 89, 450000 * 0.75, true,
+                'Headphone bluetooth dengan noise cancelling dan baterai 30 jam.'],
+            ['Elektronik', 'Power Bank 10.000mAh', 180000, 40, 156, null, true,
+                'Power bank tipis dengan fast charging 20W.'],
+            ['Fashion', 'Kaos Katun Premium', 85000, 100, 342, null, true,
+                'Kaos katun combed 30s, nyaman untuk harian.'],
+            ['Fashion', 'Tote Bag Kanvas', 120000, 60, 78, 120000 * 0.85, false,
+                'Tas kanvas kokoh, cocok untuk kuliah dan kerja.'],
+            ['Rumah Tangga', 'Lampu Meja LED', 95000, 30, 45, null, false,
+                'Lampu meja dengan 3 mode pencahayaan dan USB charging.'],
+            ['Buku & Alat Tulis', 'Notebook A5 Hardcover', 55000, 80, 220, null, true,
+                'Notebook 200 halaman dengan hardcover tahan lama.'],
         ];
 
-        foreach ($products as [$catName, $name, $price, $stock, $desc]) {
+        foreach ($products as [$catName, $name, $price, $stock, $sold, $discount, $featured, $desc]) {
             $category = Category::firstOrCreate(['slug' => Str::slug($catName)], ['name' => $catName]);
             Product::updateOrCreate(['slug' => Str::slug($name)], [
                 'seller_profile_id' => $seller->id,
@@ -56,6 +62,10 @@ class CatalogDemoSeeder extends Seeder
                 'sales_channel' => SalesChannel::B2C->value,
                 'min_purchase_qty' => 1,
                 'status' => ProductStatus::Active->value,
+                'rating' => round(4 + (mt_rand(0, 100) / 100), 2),
+                'sold_count' => $sold,
+                'discount_price' => $discount,
+                'is_featured' => $featured,
             ]);
         }
     }
@@ -108,18 +118,18 @@ class CatalogDemoSeeder extends Seeder
     private function seedB2B(SellerProfile $seller): void
     {
         $products = [
-            ['Fashion', 'Kaos Polos Grosir', 75000, 500, 12, SalesChannel::Both,
+            ['Fashion', 'Kaos Polos Grosir', 75000, 500, 12, SalesChannel::B2B, false,
                 'Kaos polos katun combed 30s untuk kebutuhan grosir.',
                 [[12, 70000], [24, 65000], [60, 60000]]],
-            ['Fashion', 'Tote Bag Kanvas Grosir', 80000, 300, 24, SalesChannel::Both,
+            ['Fashion', 'Tote Bag Kanvas Grosir', 80000, 300, 24, SalesChannel::B2B, false,
                 'Tote bag kanvas tebal untuk reseller dan event.',
                 [[24, 75000], [48, 70000]]],
-            ['Rumah Tangga', 'Lampu LED Grosir', 25000, 1000, 50, SalesChannel::B2B,
+            ['Rumah Tangga', 'Lampu LED Grosir', 25000, 1000, 50, SalesChannel::B2B, false,
                 'Lampu LED 9W khusus pembelian grosir.',
                 [[50, 22000], [200, 19000]]],
         ];
 
-        foreach ($products as [$catName, $name, $price, $stock, $minQty, $channel, $desc, $tiers]) {
+        foreach ($products as [$catName, $name, $price, $stock, $minQty, $channel, $featured, $desc, $tiers]) {
             $category = Category::firstOrCreate(['slug' => Str::slug($catName)], ['name' => $catName]);
             $product = Product::updateOrCreate(['slug' => Str::slug($name)], [
                 'seller_profile_id' => $seller->id,
@@ -131,6 +141,10 @@ class CatalogDemoSeeder extends Seeder
                 'sales_channel' => $channel->value,
                 'min_purchase_qty' => $minQty,
                 'status' => ProductStatus::Active->value,
+                'rating' => round(4 + (mt_rand(0, 80) / 100), 2),
+                'sold_count' => 0,
+                'discount_price' => null,
+                'is_featured' => $featured,
             ]);
 
             foreach ($tiers as [$minQ, $tierPrice]) {

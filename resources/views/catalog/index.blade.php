@@ -23,6 +23,7 @@
             </select>
             <select name="sort" class="rounded-md border-surface-300 bg-white text-sm focus:border-primary-500 focus:ring-primary-500">
                 <option value="terbaru" @selected(($sort ?? '') === 'terbaru')>Terbaru</option>
+                <option value="terlaris" @selected(($sort ?? '') === 'terlaris')>Terlaris</option>
                 <option value="termurah" @selected(($sort ?? '') === 'termurah')>Harga Termurah</option>
                 <option value="termahal" @selected(($sort ?? '') === 'termahal')>Harga Termahal</option>
             </select>
