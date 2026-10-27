@@ -62,7 +62,11 @@ Route::middleware(['auth', 'not.admin'])->group(function () {
 
     Route::get('/akun/toko/daftar', [\App\Http\Controllers\Buyer\SellerRegistrationController::class, 'show'])->name('buyer.seller.register.show');
     Route::post('/akun/toko/daftar', [\App\Http\Controllers\Buyer\SellerRegistrationController::class, 'store'])->name('buyer.seller.register.store');
-});
+
+    Route::get('/wallet', [\App\Http\Controllers\WalletController::class, 'index'])->name('wallet.index');
+    Route::get('/wallet/topup', [\App\Http\Controllers\WalletController::class, 'showTopup'])->name('wallet.topup');
+    Route::post('/wallet/topup', [\App\Http\Controllers\WalletController::class, 'submitTopup'])->name('wallet.topup.submit');
+    });
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';

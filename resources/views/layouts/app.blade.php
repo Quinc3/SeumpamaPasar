@@ -11,6 +11,9 @@
     @php
         $u = auth()->user();
         $cartCount = $u ? $u->cartItems()->sum('quantity') : 0;
+        $walletBalance = $u && $u->role !== \App\Enums\UserRole::Admin
+            ? (float) ($u->wallet?->balance ?? 0)
+            : 0;
     @endphp
 
     <header class="sticky top-0 z-30 bg-primary-700 text-white">
@@ -33,7 +36,18 @@
                 </form>
 
                 <div class="flex items-center gap-1">
-                @unless ($u?->role === \App\Enums\UserRole::Admin)
+                    @unless ($u?->role === \App\Enums\UserRole::Admin)
+                        {{-- SeumpamaPay (hanya untuk non-admin) --}}
+                        @auth
+                            <a href="{{ route('wallet.index') }}"
+                               class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-white/10 text-sm font-medium"
+                               title="SeumpamaPay">
+                                <x-icon name="banknotes" size="md" />
+                                <span class="hidden md:inline font-semibold">Rp {{ number_format($walletBalance, 0, ',', '.') }}</span>
+                            </a>
+                        @endauth
+
+                        {{-- Cart --}}
                         <a href="{{ $u ? route('cart.index') : route('login') }}" class="relative p-2 rounded-md hover:bg-white/10" aria-label="Keranjang">
                             <x-icon name="shopping-cart" size="lg" />
                             @if ($cartCount > 0)

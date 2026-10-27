@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->hasOne(AffiliateProfile::class);
     }
 
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
     public function businessProfile(): HasOne
     {
         return $this->hasOne(BusinessProfile::class);

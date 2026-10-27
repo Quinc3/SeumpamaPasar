@@ -90,6 +90,22 @@
             </div>
         @endif
 
+        {{-- SeumpamaPay --}}
+        @php $walletBalance = (float) ($user->wallet?->balance ?? 0); @endphp
+        <a href="{{ route('wallet.index') }}" class="block">
+            <div class="rounded-xl bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 text-white p-4 hover:shadow-lg transition">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-white/20 font-bold text-xs">SP</span>
+                        <span class="text-xs font-semibold">SeumpamaPay</span>
+                    </div>
+                    <x-icon name="chevron-right" size="sm" class="text-white/60" />
+                </div>
+                <p class="text-xs text-white/70 uppercase tracking-wide mt-3">Saldo</p>
+                <p class="text-xl font-bold">Rp {{ number_format($walletBalance, 0, ',', '.') }}</p>
+            </div>
+        </a>
+
         {{-- Statistik --}}
         <div class="grid grid-cols-3 gap-3">
             <a href="{{ route('buyer.orders.index') }}" class="block">
