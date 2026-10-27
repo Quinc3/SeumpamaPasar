@@ -51,9 +51,23 @@ class CheckoutController extends Controller
         $baseSubtotal = $lineItems->sum(fn ($li) => $li['line_total']);
 
         $methods = [
-            'demo_transfer' => 'Transfer Bank (Demo)',
-            'demo_ewallet' => 'E-Wallet (Demo)',
-            'demo_va' => 'Virtual Account (Demo)',
+            'Virtual Account' => [
+                'va_bca' => 'BCA',
+                'va_bni' => 'BNI',
+                'va_bri' => 'BRI',
+                'va_mandiri' => 'Mandiri',
+                'va_bsi' => 'BSI',
+            ],
+            'E-Wallet' => [
+                'ewallet_seumpamapay' => 'SeumpamaPay',
+                'ewallet_ovo' => 'OVO',
+                'ewallet_gopay' => 'GoPay',
+                'ewallet_dana' => 'DANA',
+            ],
+            'Gerai Retail' => [
+                'retail_indomaret' => 'Indomaret',
+                'retail_alfamart' => 'Alfamart',
+            ],
         ];
 
         return view('checkout.index', [
@@ -74,7 +88,7 @@ class CheckoutController extends Controller
     {
         $data = $request->validate([
             'address_id' => ['required', 'integer'],
-            'method' => ['required', 'in:demo_transfer,demo_ewallet,demo_va'],
+            'method' => ['required', 'string', 'in:va_bca,va_bni,va_bri,va_mandiri,va_bsi,retail_indomaret,retail_alfamart,ewallet_seumpamapay,ewallet_ovo,ewallet_gopay,ewallet_dana'],
             'cart_item_ids' => ['required', 'array', 'min:1'],
             'cart_item_ids.*' => ['integer'],
         ], [
@@ -97,15 +111,23 @@ class CheckoutController extends Controller
         }
     }
 
-    public function showPay(Request $request, Checkout $checkout): View|RedirectResponse
+    public function showPay(Request $request, Checkout $checkout, PaymentService $paymentService): View|RedirectResponse
     {
         abort_unless($checkout->user_id === $request->user()->id, 403);
+
+        $checkout->load('payment');
 
         if ($checkout->status !== \App\Enums\CheckoutStatus::PendingPayment) {
             return redirect()->route('checkout.result', $checkout->reference);
         }
 
-        $checkout->load(['orders.items', 'payment']);
+        // Auto-fail kalau expired
+        if ($checkout->payment->status === \App\Enums\PaymentStatus::Pending && $checkout->payment->isExpired()) {
+            $paymentService->recordFailure($checkout->id, 'expired');
+            return redirect()->route('checkout.result', $checkout->reference);
+        }
+
+        $checkout->load(['orders.items']);
         return view('checkout.pay', compact('checkout'));
     }
 

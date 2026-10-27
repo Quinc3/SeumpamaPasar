@@ -113,9 +113,10 @@ class CheckoutService
 
             Payment::create([
                 'checkout_id' => $checkout->id,
-                'method' => 'demo_transfer',
+                'method' => 'va_bca',
                 'status' => PaymentStatus::Pending,
                 'reference' => 'PAY-'.strtoupper(\Illuminate\Support\Str::random(12)),
+                'expires_at' => now()->addHours(24),
             ]);
 
             if (! empty($cartItemIds)) {

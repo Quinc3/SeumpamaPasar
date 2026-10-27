@@ -15,6 +15,7 @@ class Payment extends Model
         'checkout_id',
         'method',
         'reference',
+        'expires_at',
     ];
 
     protected function casts(): array
@@ -23,11 +24,17 @@ class Payment extends Model
             'status' => PaymentStatus::class,
             'paid_at' => 'datetime',
             'failed_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 
     public function checkout(): BelongsTo
     {
         return $this->belongsTo(Checkout::class);
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && now()->gt($this->expires_at);
     }
 }

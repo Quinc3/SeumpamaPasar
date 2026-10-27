@@ -47,13 +47,21 @@
                 </x-card>
 
                 <x-card>
-                    <h2 class="text-sm font-semibold text-surface-900 mb-3">Metode Pembayaran (Simulasi)</h2>
-                    <div class="space-y-2">
-                        @foreach ($methods as $value => $label)
-                            <label class="flex items-center gap-3 p-3 border border-surface-200 rounded-md cursor-pointer hover:bg-surface-50 has-[:checked]:border-primary-500 has-[:checked]:bg-primary-50">
-                                <input type="radio" name="method" value="{{ $value }}" class="text-primary-600 focus:ring-primary-500" @checked($loop->first) required>
-                                <span class="text-sm text-surface-900">{{ $label }}</span>
-                            </label>
+                    <h2 class="text-sm font-semibold text-surface-900 mb-3">Metode Pembayaran</h2>
+                    <div class="space-y-4">
+                        @foreach ($methods as $groupName => $groupMethods)
+                            <div>
+                                <p class="text-xs uppercase tracking-wide text-surface-500 mb-2">{{ $groupName }}</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    @foreach ($groupMethods as $value => $label)
+                                        <label class="flex items-center gap-2.5 p-2.5 border border-surface-200 rounded-md cursor-pointer hover:bg-surface-50 has-[:checked]:border-primary-500 has-[:checked]:bg-primary-50">
+                                            <input type="radio" name="method" value="{{ $value }}" class="text-primary-600 focus:ring-primary-500"
+                                                   @checked($loop->parent->first && $loop->first) required>
+                                            <span class="text-sm text-surface-900">{{ $label }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
                         @endforeach
                     </div>
                 </x-card>

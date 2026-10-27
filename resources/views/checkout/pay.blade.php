@@ -1,60 +1,93 @@
 @extends('layouts.app')
 
-@section('title', 'Pembayaran Simulasi')
+@section('title', 'Pembayaran')
 
 @section('content')
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4">
-        <x-banner-simulation />
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4"
+         x-data="countdown('{{ $checkout->payment->expires_at?->toIso8601String() }}')"
+         x-init="init()">
+        @php
+            $user = $checkout->user;
+            $uid = str_pad((string) $user->id, 4, '0', STR_PAD_LEFT);
+            $cid = str_pad((string) $checkout->id, 8, '0', STR_PAD_LEFT);
+            $method = $checkout->payment->method;
+
+            // Prefix bank VA
+            $vaBanks = [
+                'va_bca' => ['bank' => 'BCA', 'prefix' => '8808'],
+                'va_bni' => ['bank' => 'BNI', 'prefix' => '8810'],
+                'va_bri' => ['bank' => 'BRI', 'prefix' => '8888'],
+                'va_mandiri' => ['bank' => 'Mandiri', 'prefix' => '8911'],
+                'va_bsi' => ['bank' => 'BSI', 'prefix' => '9001'],
+            ];
+
+            if (isset($vaBanks[$method])) {
+                $bankName = $vaBanks[$method]['bank'];
+                $vaNumber = chunk_split($vaBanks[$method]['prefix'] . $uid . $cid, 4, ' ');
+            } elseif (str_starts_with($method, 'retail_')) {
+                $retailCode = strtoupper(substr($method, 7)) . $uid . substr($cid, 0, 6);
+            } elseif ($method === 'ewallet_seumpamapay' || str_starts_with($method, 'ewallet_')) {
+                $ewalletNumber = '0812-' . $uid . '-' . substr($cid, 4);
+            } elseif ($method === 'demo_transfer') {
+                $vaNumber = null;
+            }
+        @endphp
 
         <div class="flex items-center justify-between">
             <h1 class="text-xl sm:text-2xl font-semibold text-surface-900">Pembayaran</h1>
             <a href="{{ route('cart.index') }}" class="text-sm text-surface-600 hover:text-surface-900">← Keranjang</a>
         </div>
 
-        @php
-            $user = $checkout->user;
-            $uid = str_pad((string) $user->id, 4, '0', STR_PAD_LEFT);
-            $cid = str_pad((string) $checkout->id, 8, '0', STR_PAD_LEFT);
-            $method = $checkout->payment->method;
-            $vaNumber = chunk_split('8808' . $uid . $cid, 4, ' ');
-            $ewalletNumber = '0812-' . $uid . '-' . substr($cid, 4);
-        @endphp
+        {{-- Countdown --}}
+        @if ($checkout->payment->expires_at)
+            <x-card class="border-amber-200 bg-amber-50">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-sm">
+                        <x-icon name="exclamation-triangle" size="md" class="text-amber-600" />
+                        <span class="text-surface-700">Selesaikan pembayaran dalam</span>
+                    </div>
+                    <span class="text-lg font-mono font-bold text-amber-700" x-text="formatted"></span>
+                </div>
+            </x-card>
+        @endif
 
         <x-card>
-            {{-- Tujuan pembayaran berdasarkan metode --}}
-            @if ($method === 'demo_va')
+            @if (isset($vaBanks[$method]))
                 <div class="text-center pb-4 border-b border-surface-200 mb-4">
-                    <p class="text-xs uppercase tracking-wide text-surface-500">Virtual Account — BCA</p>
+                    <p class="text-xs uppercase tracking-wide text-surface-500">Virtual Account {{ $bankName }}</p>
                     <p class="text-2xl sm:text-3xl font-mono font-bold text-primary-700 tracking-wider mt-2">{{ trim($vaNumber) }}</p>
                     <p class="text-xs text-surface-500 mt-1.5">a.n. {{ $user->name }}</p>
+                    <p class="text-xs text-surface-400 mt-1">Simulasi — tidak ada transaksi nyata</p>
                 </div>
-            @elseif ($method === 'demo_ewallet')
+            @elseif (str_starts_with($method, 'retail_'))
+                <div class="text-center pb-4 border-b border-surface-200 mb-4">
+                    <p class="text-xs uppercase tracking-wide text-surface-500">
+                        Kode Pembayaran {{ strtoupper(str_replace('retail_', '', $method)) }}
+                    </p>
+                    <p class="text-2xl sm:text-3xl font-mono font-bold text-primary-700 tracking-wider mt-2">{{ $retailCode }}</p>
+                    <p class="text-xs text-surface-500 mt-1.5">Tunjukkan kode ini di kasir {{ ucfirst(str_replace('retail_', '', $method)) }}</p>
+                    <p class="text-xs text-surface-400 mt-1">Simulasi — tidak ada transaksi nyata</p>
+                </div>
+            @elseif (str_starts_with($method, 'ewallet_'))
                 <div class="text-center pb-4 border-b border-surface-200 mb-4">
                     <div class="inline-flex items-center gap-2 justify-center">
                         <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-primary-700 text-white text-[10px] font-bold">SP</span>
-                        <span class="text-sm font-semibold text-surface-900">SeumpamaPay</span>
+                        <span class="text-sm font-semibold text-surface-900">{{ ucfirst(str_replace('ewallet_', '', $method)) }}</span>
                     </div>
                     <p class="text-2xl sm:text-3xl font-mono font-bold text-primary-700 tracking-wider mt-2">{{ $ewalletNumber }}</p>
                     <p class="text-xs text-surface-500 mt-1.5">a.n. {{ $user->name }}</p>
-                </div>
-            @elseif ($method === 'demo_transfer')
-                <div class="pb-4 border-b border-surface-200 mb-4">
-                    <p class="text-xs uppercase tracking-wide text-surface-500">Transfer Bank — BCA</p>
-                    <p class="text-xl font-mono font-bold text-primary-700 mt-1">1234567890</p>
-                    <p class="text-sm text-surface-700 mt-1">a.n. PT Seumpama Pasar Nusantara</p>
-                    <p class="text-xs text-surface-500 mt-3">Berita transfer:</p>
-                    <p class="font-mono text-sm text-surface-900 mt-0.5 break-all bg-surface-50 px-2 py-1 rounded">{{ $checkout->reference }}</p>
+                    <p class="text-xs text-surface-400 mt-1">Simulasi — tidak ada transaksi nyata</p>
                 </div>
             @endif
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
                     <p class="text-xs uppercase tracking-wide text-surface-500">Referensi</p>
-                    <p class="font-mono text-surface-900 mt-0.5">{{ $checkout->reference }}</p>
+                    <p class="font-mono text-surface-900 mt-0.5 break-all">{{ $checkout->reference }}</p>
                 </div>
                 <div>
                     <p class="text-xs uppercase tracking-wide text-surface-500">Metode</p>
-                    <p class="text-surface-900 mt-0.5">{{ str_replace('_', ' ', $checkout->payment->method) }}</p>
+                    <p class="text-surface-900 mt-0.5">{{ ucwords(str_replace(['_', 'va ', 'retail ', 'ewallet '], [' ', '', '', ''], $method)) }}</p>
                 </div>
                 <div>
                     <p class="text-xs uppercase tracking-wide text-surface-500">Total</p>
@@ -80,7 +113,7 @@
 
         <x-card>
             <p class="text-sm text-surface-700 mb-3">
-                Ini adalah <strong>pembayaran simulasi</strong>. Tidak ada uang sungguhan yang berpindah. Pilih hasil yang ingin disimulasikan:
+                Pilih hasil yang ingin disimulasikan:
             </p>
             <div class="flex flex-col sm:flex-row gap-2">
                 <form method="POST" action="{{ route('checkout.pay.submit', $checkout->reference) }}" class="flex-1">
@@ -102,4 +135,33 @@
             </div>
         </x-card>
     </div>
+
+    <script>
+        function countdown(expiresAtIso) {
+            return {
+                expiresAt: expiresAtIso,
+                remaining: 0,
+                timer: null,
+                init() {
+                    if (!this.expiresAt) return;
+                    const end = new Date(this.expiresAt).getTime();
+                    const tick = () => {
+                        this.remaining = Math.max(0, Math.floor((end - Date.now()) / 1000));
+                        if (this.remaining === 0) {
+                            clearInterval(this.timer);
+                            window.location.reload();
+                        }
+                    };
+                    tick();
+                    this.timer = setInterval(tick, 1000);
+                },
+                get formatted() {
+                    const h = Math.floor(this.remaining / 3600);
+                    const m = Math.floor((this.remaining % 3600) / 60);
+                    const s = this.remaining % 60;
+                    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                }
+            };
+        }
+    </script>
 @endsection

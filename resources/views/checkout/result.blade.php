@@ -12,10 +12,12 @@
             <x-alert variant="success">
                 Pembayaran simulasi berhasil. Pesanan diteruskan ke penjual.
             </x-alert>
-        @else
+            @else
             <x-alert variant="danger">
-                Pembayaran simulasi gagal.
-                @if ($checkout->payment->failure_reason === 'insufficient_stock')
+                Pembayaran gagal.
+                @if ($checkout->payment->failure_reason === 'expired')
+                    Waktu pembayaran habis. Silakan buat pesanan baru.
+                @elseif ($checkout->payment->failure_reason === 'insufficient_stock')
                     Stok berubah sejak checkout. Silakan buat pesanan baru.
                 @elseif ($checkout->payment->failure_reason === 'price_changed')
                     Harga produk berubah sejak checkout. Silakan buat pesanan baru.
@@ -57,12 +59,20 @@
                     <x-icon name="check-circle" size="lg" class="text-green-600 flex-shrink-0 mt-0.5" />
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-surface-900">Pembayaran diterima</p>
-                        @if ($method === 'demo_va')
-                            <p class="text-xs text-surface-600 mt-1">Via Virtual Account BCA <span class="font-mono">{{ trim(chunk_split('8808' . $uid . $cid, 4, ' ')) }}</span></p>
-                        @elseif ($method === 'demo_ewallet')
-                            <p class="text-xs text-surface-600 mt-1">Via SeumpamaPay <span class="font-mono">0812-{{ $uid }}-{{ substr($cid, 4) }}</span></p>
+                        @php
+                            $vaBanks = [
+                                'va_bca' => 'BCA', 'va_bni' => 'BNI', 'va_bri' => 'BRI',
+                                'va_mandiri' => 'Mandiri', 'va_bsi' => 'BSI',
+                            ];
+                        @endphp
+                        @if (isset($vaBanks[$method]))
+                            <p class="text-xs text-surface-600 mt-1">Via Virtual Account {{ $vaBanks[$method] }}</p>
+                        @elseif (str_starts_with($method, 'retail_'))
+                            <p class="text-xs text-surface-600 mt-1">Via {{ ucfirst(str_replace('retail_', '', $method)) }}</p>
+                        @elseif (str_starts_with($method, 'ewallet_'))
+                            <p class="text-xs text-surface-600 mt-1">Via {{ ucfirst(str_replace('ewallet_', '', $method)) }}</p>
                         @elseif ($method === 'demo_transfer')
-                            <p class="text-xs text-surface-600 mt-1">Via Transfer BCA <span class="font-mono">1234567890</span></p>
+                            <p class="text-xs text-surface-600 mt-1">Via Transfer Bank</p>
                         @endif
                     </div>
                 </div>

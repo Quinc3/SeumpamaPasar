@@ -30,9 +30,10 @@ class PaymentService
                 return 'already_processed';
             }
 
-            if (! $simulateSuccess) {
+            // Cek expiry
+            if ($payment->isExpired()) {
                 DB::rollBack();
-                $this->recordFailure($checkout->id, 'buyer_selected_failure');
+                $this->recordFailure($checkout->id, 'expired');
                 return 'failed';
             }
 
@@ -112,7 +113,7 @@ class PaymentService
         }
     }
 
-    private function recordFailure(int $checkoutId, string $reason): void
+    public function recordFailure(int $checkoutId, string $reason): void
     {
         DB::transaction(function () use ($checkoutId, $reason) {
             $payment = Payment::query()->where('checkout_id', $checkoutId)->lockForUpdate()->first();
@@ -154,6 +155,7 @@ class PaymentService
             'seller_inactive',
             'buyer_not_eligible',
             'order_status_changed',
+            'expired',
         ];
         return in_array($e->getMessage(), $known, true) ? $e->getMessage() : 'checkout_validation_failed';
     }
