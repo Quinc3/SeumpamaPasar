@@ -1,59 +1,144 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Integrated E-Commerce Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi e-commerce akademik dengan **2 jenis perdagangan** (B2C, B2B) dan **3 model bisnis** (Member, Affiliate, Seller). Semua transaksi bersifat simulasi — tidak ada uang sungguhan, payment gateway, atau API eksternal.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Laravel 12.70.1 · PHP 8.2.12
+- Blade + Tailwind CSS v3 + Vite 7 + Alpine.js
+- MariaDB 10.4 (atau MySQL 8.0+)
+- PHPUnit 11.5
+- Heroicons v2 (SVG lokal)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Persyaratan
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2+, Composer 2.x, Node.js 18+, npm
+- MySQL 8.0+ / MariaDB 10.4+
+- Ekstensi PHP: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `fileinfo`, `bcmath`, `curl`, `gd`
 
-## Learning Laravel
+## Instalasi
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+git clone <repo> e-commerce
+cd e-commerce
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# Backend
+composer install
+cp .env.example .env
+php artisan key:generate
 
-## Laravel Sponsors
+# Frontend
+npm install
+npm run build
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# Storage (untuk gambar produk)
+php artisan storage:link
+```
 
-### Premium Partners
+Edit `.env`:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=e_commerce
+DB_USERNAME=root
+DB_PASSWORD=
+APP_URL=http://localhost:8000
+```
 
-## Contributing
+Buat database di MySQL/MariaDB:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```sql
+CREATE DATABASE e_commerce CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-## Code of Conduct
+Migrasi + seed:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan migrate
+php artisan db:seed
+```
 
-## Security Vulnerabilities
+## Menjalankan
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan serve
+# Buka http://127.0.0.1:8000
+```
 
-## License
+## Akun Demo (dari seeder)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Email | Password | Peran |
+|---|---|---|
+| admin@example.test | password | Admin |
+| seller@example.test | password | Seller individu |
+| business@example.test | password | Seller bisnis (terverifikasi) |
+| buyer@example.test | password | Buyer personal |
+
+## Fitur
+
+### Jenis Perdagangan
+- **B2C** — semua pembeli bisa beli produk B2C
+- **B2B** — hanya pembeli bisnis terverifikasi; harga tier grosir + minimum qty
+
+### Model Bisnis
+- **Member** — diskon 5% otomatis setelah aktivasi di `/akun/member`
+- **Affiliate** — komisi 5% simulasi dari order via referral link; aktivasi di `/akun/afiliasi`
+- **Seller** — kelola produk & pesanan via `/toko`
+
+### Alur Belanja
+Katalog → Keranjang → Checkout → Pembayaran Simulasi → Order
+
+### Simulasi Pembayaran
+Pilih **Berhasil** atau **Gagal** di halaman pembayaran. Status order mengikuti:
+- Berhasil → `pending_processing` → seller proses → seller kirim → buyer terima → `completed`
+- Gagal → `cancelled`, stok tidak berubah
+
+### Refund Simulasi
+Seller dapat membatalkan order `pending_processing` → stok kembali, refund dicatat di `orders.refunded_amount` (tidak ada uang nyata berpindah).
+
+### Affiliate
+- Aktivasi: `/akun/afiliasi` → dapat kode referral 8 karakter
+- Share link: `<url>?ref=KODE`
+- Komisi: 5% × subtotal order saat berstatus `completed`
+- Self-referral diblokir
+
+### Admin
+- Dashboard analytics (pendapatan, order, komisi, penjual teratas)
+- Moderasi produk (approve/reject)
+- Verifikasi bisnis
+- Kelola afiliasi (suspend/activate)
+- Kelola kategori
+
+### Seller
+- Dashboard analytics (pendapatan, produk terlaris)
+- CRUD produk (draft → pending_review → active)
+- Tier harga grosir (khusus B2B/Both)
+- Kelola pesanan (proses, kirim, batalkan)
+
+## Testing
+
+```bash
+vendor/bin/phpunit
+```
+
+## Struktur Dokumen
+
+Spesifikasi proyek di `docs/`:
+
+- `PROJECT_SPEC.md` — spec bisnis (v2.0)
+- `IMPLEMENTATION_PLAN.md` — roadmap (v2.0)
+- `AI_RULES.md` — aturan kerja AI (v2.0)
+- `PROGRESS.md` — status proyek
+
+## Batasan Simulasi
+
+- Tidak ada payment gateway
+- Tidak ada integrasi provider PPOB / digital
+- Semua transaksi uang = simulasi
+- Tabel `digital_*` di DB tidak dipakai (leftover Fase 1)
+
+## Lisensi
+
+Proyek akademik — MIT.
