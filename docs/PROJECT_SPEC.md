@@ -1,907 +1,358 @@
 # PROJECT_SPEC — Integrated E-Commerce Platform
 
-> **Status dokumen:** Sumber kebenaran untuk Fase 2 dan seterusnya.
->
-> **Status proyek:** Fase 1 (Discovery & Planning) selesai dan disetujui.
->
-> **Kondisi kode:** Proyek belum diaudit. Belum ada klaim bahwa kode, migration, model, atau tes sudah tersedia atau berjalan. Semua deskripsi implementasi di dokumen ini merupakan spesifikasi yang direncanakan, bukan bukti implementasi.
+> **Versi:** 2.0 — Revisi 27 Oktober 2026 (scope: B2C + B2B + Member + Affiliate + Seller)
+> **Status:** Sumber kebenaran untuk Fase 2 dan seterusnya.
+> **Fase 1:** selesai & disetujui. **Revisi v2.0:** disetujui 27 Oktober 2026.
+> **Kondisi kode:** sudah ada fondasi (Laravel 12, Breeze, 16 model, 19 migration). Detail: `PROGRESS.md`.
 
 ---
 
 ## 1. Tujuan dan Ruang Lingkup
 
-Aplikasi e-commerce untuk proyek akademik yang mendukung tiga model bisnis dalam satu aplikasi modular monolith:
+Aplikasi e-commerce terintegrasi untuk proyek akademik dengan **dua jenis perdagangan** dan **tiga model bisnis**:
 
-- **B2C** — bisnis menjual kepada konsumen.
-- **B2B** — bisnis menjual kepada bisnis lain dengan harga grosir bertingkat dan minimum pembelian.
-- **C2C** — individu menjual kepada individu lain.
+### Jenis perdagangan
+1. **B2C** — retail kepada konsumen.
+2. **B2B** — grosir/bisnis dengan tier harga & minimum order quantity.
 
-Aplikasi juga menyediakan modul simulasi layanan digital:
+### Model bisnis
+1. **Member** — pelanggan dengan benefit diskon simulasi.
+2. **Affiliate** — pemasar dengan referral link dan komisi simulasi.
+3. **Seller** — penjual di marketplace (individu atau bisnis).
 
-- Tagihan listrik pascabayar (dummy).
-- Token listrik prabayar (dummy).
-- Pulsa.
-- Paket data.
+Reseller/dropship = pengembangan lanjutan, **di luar scope**.
 
-### 1.1 Ruang lingkup
+### Ruang lingkup
+- Katalog, pencarian, keranjang, checkout multi-seller.
+- B2B tier pricing & minimum quantity.
+- Pesanan, stok, pembayaran simulasi, pembatalan & refund simulasi.
+- Akun pelanggan, membership, affiliate, seller.
+- Referral & commission tracking.
+- Moderasi produk & verifikasi bisnis oleh admin.
+- Dashboard per role.
 
-- Katalog produk, keranjang, checkout, dan pesanan per penjual.
-- Pembayaran simulasi.
-- Moderasi produk oleh admin.
-- Verifikasi akun bisnis oleh admin.
-- Dashboard admin dan penjual serta halaman akun pembeli.
-- Laporan berdasarkan data yang tersimpan di database.
-- Riwayat transaksi digital milik masing-masing pengguna.
-- Simulasi pembatalan, pencatatan refund, dan pengembalian stok sesuai aturan dokumen ini.
-
-### 1.2 Di luar ruang lingkup
-
-- Payment gateway atau pemrosesan uang sungguhan.
-- Integrasi API PPOB atau provider layanan digital.
+### Di luar ruang lingkup
+- Payment gateway / uang sungguhan.
+- Integrasi PPOB / API eksternal.
 - Microservices.
-- Perhitungan ongkir, pajak, atau biaya pembayaran.
+- Perhitungan ongkir, pajak, biaya pembayaran.
 - Multi-currency.
-- Notifikasi eksternal melalui email atau push notification.
-- API publik untuk aplikasi mobile.
+- **Layanan digital** (tagihan, token, pulsa, data) — **dihapus dari scope**, tabel DB dibiarkan (unused).
+- C2C sebagai jenis perdagangan terpisah — dijembatani oleh `seller_type=individual` di dalam B2C.
+- Reseller / dropship.
 
-Perubahan ruang lingkup memerlukan keputusan baru sebelum implementasi.
-
-### 1.3 Batasan simulasi
-
-- Semua pembayaran harus diberi label **SIMULASI**.
-- Token listrik menggunakan kode dummy yang diawali `DUMMY-` dan diberi penanda `SIMULASI`.
-- Tidak menyimpan nomor kartu, CVV, password bank, PIN, atau kredensial sensitif.
-- Pencatatan refund tidak memindahkan uang sungguhan.
-- Seluruh transaksi layanan digital merupakan simulasi internal.
+### Batasan simulasi
+- Semua pembayaran & komisi berlabel **SIMULASI**.
+- Tidak menyimpan kredensial pembayaran.
+- Refund & komisi adalah pencatatan internal, bukan uang nyata.
 
 ---
 
-## 2. Stack Teknologi dan Batasan Teknis
+## 2. Stack Teknologi
 
-| Aspek | Keputusan |
+| Aspek | Nilai |
 |---|---|
-| Bahasa | PHP 8.2+ |
-| Framework | Laravel versi stabil yang kompatibel; asumsi awal Laravel 12.x, diverifikasi saat audit |
-| Database | MySQL 8.0+ / MariaDB 10.4+ (kompatibel; diverifikasi pada audit Fase 2, 23 Oktober 2026) |
-| Frontend | Blade + Tailwind CSS melalui Vite |
-| Auth starter | Laravel Breeze (Blade) |
-| Testing | PHPUnit atau Pest, mengikuti kondisi proyek |
-| Deployment target | Lingkungan lokal untuk demonstrasi akademik |
+| PHP | 8.2.12 |
+| Framework | Laravel 12.70.1 |
+| Auth starter | Breeze 2.4.2 |
+| Frontend | Blade + Tailwind CSS v3.4.19 + Vite 7 |
+| JS interaktif | Alpine 3.4.2 (sudah ada) |
+| Database | MariaDB 10.4.32, DB `e_commerce` |
+| Ikon | Heroicons v2 Outline — via `<x-icon>` (custom SVG, lisensi MIT) |
+| Testing | PHPUnit 11.5 |
+| Deployment | lokal, `php artisan serve` |
 
-> Catatan (23 Oktober 2026): lingkungan pengembangan menggunakan MariaDB 10.4.32 (bukan MySQL 8.0+). Perbedaan kompatibilitas telah ditinjau; tidak ada fitur pada spesifikasi yang memerlukan MySQL 8.0 secara eksklusif (InnoDB, DECIMAL, FOREIGN KEY, UNIQUE, `SELECT ... FOR UPDATE`, dan window function semuanya didukung MariaDB 10.4). Keputusan: MariaDB 10.4 diterima sebagai kompatibel.
-
-### 2.1 Asumsi yang wajib diverifikasi
-
-Sebelum implementasi Fase 2, audit:
-
-- Versi PHP dan Laravel.
-- Versi Node.js dan package manager.
-- Ketersediaan ekstensi PHP yang dibutuhkan, termasuk `pdo_mysql` dan ekstensi pemrosesan gambar yang relevan.
-- Struktur folder dan file yang sudah ada.
-- Kondisi autentikasi, route, migration, model, dan konfigurasi database.
-- Status dependensi Composer dan npm.
-
-Jika proyek sudah ada, pertahankan versi dan struktur yang kompatibel. Jangan menaikkan atau menurunkan versi tanpa alasan teknis yang jelas.
-
-### 2.2 Batasan dependensi dan arsitektur
-
-- Jangan menambah package Composer atau npm tanpa alasan yang dijelaskan.
-- Jangan menggunakan package permission pihak ketiga; gunakan Policy, middleware, dan kolom identitas yang ditentukan dalam dokumen ini.
-- Jangan menerapkan repository pattern atau abstraksi tambahan tanpa kebutuhan konkret.
-- Gunakan modular monolith dengan service class untuk logika bisnis yang memang perlu digunakan bersama.
-- Hindari duplikasi aturan bisnis antara controller, job, dan service.
-- Jangan membangun fitur di luar ruang lingkup hanya untuk mengantisipasi kebutuhan yang belum disetujui.
+**Dilarang:** menambah React/Next/microservices/API terpisah/repository pattern/library baru tanpa kebutuhan jelas. Jangan membaca `.env` asli. Jangan menjalankan `migrate:fresh`/`db:wipe` tanpa approval eksplisit.
 
 ---
 
-## 3. Role Pengguna dan Matriks Otorisasi
+## 3. Struktur Pengguna
 
-### 3.1 Atribut identitas
+### 3.1 Atribut identity
+- `users.role` ∈ {`admin`, `user`}.
+- `users.account_type` ∈ {`personal`, `business`}.
+- `users.member_since` (nullable timestamp) — diisi saat user aktifkan member.
+- `business_profiles.verified_at` (nullable) — verifikasi akun bisnis.
+- `seller_profiles.seller_type` ∈ {`individual`, `business`}.
+- `seller_profiles.status` ∈ {`pending`, `active`, `suspended`}.
+- `affiliate_profiles.status` ∈ {`active`, `suspended`}.
 
-- `users.role` ∈ `admin`, `user`.
-- `users.account_type` ∈ `personal`, `business`.
-- `business_profiles.verified_at`: `NULL` berarti belum terverifikasi.
-- `seller_profiles.seller_type` ∈ `individual`, `business`.
-- `seller_profiles.status` ∈ `pending`, `active`, `suspended`.
+### 3.2 Kapabilitas paralel (bukan mutually exclusive)
+Satu user **boleh memiliki beberapa profil sekaligus**:
+- User identity selalu ada (registrasi).
+- `business_profiles` (opsional) → membuka akses B2B.
+- `seller_profiles` (opsional) → membuka akses toko.
+- `affiliate_profiles` (opsional) → membuka referral.
+- `users.member_since` (opsional) → benefit member.
 
-Status `rejected` tidak digunakan untuk `seller_profiles`. Pendaftaran penjual yang ditolak menggunakan status `suspended` disertai pencatatan alasan penolakan pada mekanisme yang ditentukan saat implementasi.
-
-### 3.2 Definisi peran efektif
-
-- **Admin:** `users.role = admin`.
-- **Pembeli konsumen:** pengguna dengan `role = user` yang merupakan akun personal atau akun bisnis yang belum terverifikasi.
-- **Pembeli bisnis terverifikasi:** pengguna dengan `role = user`, `account_type = business`, dan `business_profiles.verified_at IS NOT NULL`.
-- **Penjual individu (C2C):** memiliki `seller_profiles` dengan `seller_type = individual` dan `status = active`.
-- **Penjual bisnis (B2C/B2B):** memiliki `seller_profiles` dengan `seller_type = business`, `status = active`, serta profil bisnis terverifikasi.
-
-Status seller yang aktif tidak menggantikan pemeriksaan kepemilikan akun, dan verifikasi bisnis tidak otomatis mengaktifkan profil seller.
+**Tidak ada role baru** di `users.role`. Kapabilitas = keberadaan profil + status.
 
 ### 3.3 Matriks otorisasi
 
-| Kapabilitas | Admin | Buyer personal | Buyer bisnis terverifikasi | Seller individu | Seller bisnis |
-|---|---|---|---|---|---|
-| Lihat katalog publik | Ya | Ya | Ya | Ya | Ya |
-| Lihat harga grosir dan tier | Tidak | Tidak | Ya | Tidak | Tidak |
-| Kelola profil dan alamat sendiri | Ya | Ya | Ya | Ya | Ya |
-| Kelola produk sendiri | Tidak | Tidak | Tidak | Ya | Ya |
-| Mengatur tier harga grosir | Tidak | Tidak | Tidak | Tidak | Ya |
-| Mengatur `min_purchase_qty` | Tidak | Tidak | Tidak | Tidak | Ya |
-| Lihat pesanan sendiri sebagai pembeli | Semua | Milik sendiri | Milik sendiri | Milik sendiri | Milik sendiri |
-| Lihat pesanan toko sendiri | Semua | Tidak | Tidak | Milik sendiri | Milik sendiri |
-| Ubah status pemenuhan pesanan | Tidak | Tidak | Tidak | Milik sendiri | Milik sendiri |
-| Batalkan order `pending_processing` | Semua | Tidak | Tidak | Milik sendiri | Milik sendiri |
-| Moderasi produk | Ya | Tidak | Tidak | Tidak | Tidak |
-| Kelola kategori | Ya | Tidak | Tidak | Tidak | Tidak |
-| Verifikasi akun bisnis | Ya | Tidak | Tidak | Tidak | Tidak |
-| Approve atau suspend seller | Ya | Tidak | Tidak | Tidak | Tidak |
-| Kelola konfigurasi layanan digital | Ya | Tidak | Tidak | Tidak | Tidak |
-| Gunakan layanan digital simulasi | Ya | Ya | Ya | Ya | Ya |
-| Lihat laporan admin | Ya | Tidak | Tidak | Tidak | Tidak |
-| Lihat laporan penjual | Tidak | Tidak | Tidak | Toko sendiri | Toko sendiri |
+| Kapabilitas | Admin | Buyer (personal) | Business buyer | Member | Affiliate | Seller | Seller bisnis |
+|---|---|---|---|---|---|---|---|
+| Lihat katalog publik | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Harga grosir & tier | – | – | ✓ | – | – | – | – |
+| Kelola profil sendiri | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Kelola produk sendiri | – | – | – | – | – | ✓ | ✓ |
+| Set tier harga grosir | – | – | – | – | – | – | ✓ |
+| Kelola pesanan sebagai seller | – | – | – | – | – | ✓ (own) | ✓ (own) |
+| Batalkan order `pending_processing` | ✓ (all) | – | – | – | – | ✓ (own) | ✓ (own) |
+| Moderasi produk | ✓ | – | – | – | – | – | – |
+| Verifikasi bisnis | ✓ | – | – | – | – | – | – |
+| Approve/suspend seller | ✓ | – | – | – | – | – | – |
+| Approve/suspend affiliate | ✓ | – | – | – | – | – | – |
+| Gunakan referral | – | – | – | – | ✓ | – | – |
+| Lihat komisi sendiri | – | – | – | – | ✓ | – | – |
+| Lihat semua komisi | ✓ | – | – | – | – | – | – |
+| Lihat benefit member | – | – | – | ✓ | – | – | – |
 
-Semua otorisasi wajib diperiksa di server menggunakan Policy dan middleware yang sesuai. Menyembunyikan tombol di UI bukan mekanisme keamanan.
-
-Admin yang bertransaksi sebagai pembeli tetap mengikuti aturan transaksi sesuai kebijakan akun dan fitur yang diterapkan; hak admin tidak boleh secara otomatis melewati validasi integritas transaksi.
+Semua otorisasi server-side via Policy + middleware.
 
 ---
 
-## 4. Aturan B2C, B2B, C2C, Harga Grosir, dan Verifikasi Bisnis
+## 4. Aturan Bisnis — B2C, B2B, Member, Affiliate, Seller
 
-### 4.1 Batasan `sales_channel`
+### 4.1 Sales channel & seller type
 
-- `seller_type = individual` hanya boleh memiliki produk dengan `sales_channel = b2c`.
-- `seller_type = business` boleh memiliki produk dengan `sales_channel = b2c`, `b2b`, atau `both`.
+| `seller_type` | `sales_channel` yang boleh |
+|---|---|
+| `individual` | hanya `b2c` |
+| `business` | `b2c`, `b2b`, `both` |
 
-Aturan ini harus divalidasi pada server saat membuat atau memperbarui produk.
+`seller_type=business` **wajib** memiliki `business_profiles.verified_at ≠ NULL`.
 
 ### 4.2 Matriks pembelian
 
-| `sales_channel` | Pembeli personal | Bisnis belum terverifikasi | Bisnis terverifikasi |
+| `sales_channel` | Pembeli personal | Bisnis belum verified | Bisnis verified |
 |---|---|---|---|
 | `b2c` | Boleh, harga dasar | Boleh, harga dasar | Boleh, harga dasar |
-| `b2b` | Ditolak; produk tidak ditampilkan dan URL produk mengembalikan 404 | Ditolak; produk tidak ditampilkan dan URL produk mengembalikan 404 | Boleh, aturan minimum pembelian berlaku |
-| `both` | Boleh, harga dasar | Boleh, harga dasar | Boleh, aturan minimum pembelian berlaku |
+| `b2b` | **Ditolak** (404 di URL) | **Ditolak** (404) | Boleh, min qty berlaku |
+| `both` | Boleh, harga dasar | Boleh, harga dasar | Boleh, min qty berlaku |
 
-Tidak ada fallback dari produk `b2b` ke harga konsumen untuk pembeli yang tidak memenuhi syarat. Produk `both` dapat dibeli oleh konsumen menggunakan harga dasar, tetapi akses harga grosir hanya tersedia untuk bisnis terverifikasi.
+Tidak ada fallback dari `b2b` ke harga konsumen.
 
-### 4.3 Harga dan kuantitas
+### 4.3 Harga & kuantitas
+- `min_purchase_qty` hanya untuk pembeli bisnis terverifikasi pada produk `b2b`/`both`.
+- Resolusi harga: tier dengan `min_quantity` terbesar yang `≤ qty`; jika tidak ada, `products.price`.
+- Tier wajib: `min_quantity ≥ 1`, `price > 0`, `price < products.price`.
 
-- `min_purchase_qty` berlaku hanya untuk pembeli bisnis terverifikasi pada produk `b2b` atau `both`.
-- Pembeli personal dan bisnis yang belum terverifikasi menggunakan minimum kuantitas 1.
-- Jika pembeli bisnis terverifikasi melakukan checkout dengan kuantitas di bawah `min_purchase_qty`, checkout ditolak dengan pesan:
+### 4.4 Member
+- Aktivasi: user membuka `/akun/member` → klik "Aktifkan Member" → `users.member_since = now()`.
+- Benefit: **diskon 5%** otomatis di subtotal checkout (per `checkouts`, bukan per order).
+- Badge "Member" tampil di top bar buyer & `/akun`.
+- Diskon dihitung di `CheckoutService`, bukan di UI.
+- Member tetap bisa membeli sebagai personal atau business (dual-capability).
+- **Tidak ada** sistem poin, tier berjenjang, atau kartu member fisik.
 
-  `Jumlah minimum pembelian untuk produk ini adalah X.`
+### 4.5 Affiliate
 
-#### Resolusi harga
+**Profil:**
+- 1:1 dengan `users`. Dibuat saat user klik "Aktifkan Affiliate" di `/akun`.
+- `referral_code` (unique) — 8 karakter alfanumerik uppercase, dibuat otomatis.
+- Default status: `active`.
 
-Untuk pembeli bisnis terverifikasi pada produk `b2b` atau `both`:
+**Atribusi:**
+- **First-touch**, window **30 hari**.
+- Saat visitor baru mendarat dengan `?ref=CODE`, simpan di session (`affiliate_ref_code`) + cookie (`affiliate_ref_code`, 30 hari).
+- Saat checkout, `referrals` dibuat dengan:
+  - `affiliate_id`, `referred_user_id` (nullable jika guest → jadi null), `referral_code`, `session_id`, `landed_at`.
+- **Self-referral diblokir:** jika `buyer_id === affiliate_profiles.user_id` → tidak buat referral.
+- **Duplikasi:** 1 checkout hanya di-atribusikan ke 1 affiliate (yang tercatat di session).
+- **Override:** klik link affiliate baru dalam window overwrite kode lama (first-touch yang berlaku saat window aktif).
 
-1. Ambil tier harga yang memenuhi `min_quantity <= quantity`.
-2. Pilih tier dengan `min_quantity` terbesar yang memenuhi syarat.
-3. Jika tidak ada tier yang memenuhi syarat, gunakan `products.price`.
+**Komisi:**
+- Rate: **5% × orders.subtotal** (setelah diskon member jika ada, sebelum refund).
+- Trigger: saat `orders.status = completed`.
+- Buat 1 baris di `commissions` per order × affiliate (unique constraint).
+- Status komisi: `pending` (order belum completed) → `approved` (order completed) → `cancelled` (order cancelled sebelum completed).
+- Bila order `cancelled` setelah `completed` (tidak mungkin per aturan) → tidak ada jalur.
+- Refund (order dibatalkan di `pending_processing`) sebelum completed → tidak ada komisi.
 
-Untuk pembeli lainnya, gunakan `products.price`.
-
-Ketentuan tier:
-
-- `min_quantity >= 1`.
-- `price > 0`.
-- `price < products.price`.
-- `unique(product_id, min_quantity)`.
-
-Harga dihitung oleh satu komponen logika bisnis, misalnya `PriceResolver`, yang digunakan secara konsisten oleh katalog, keranjang, checkout, dan validasi pembayaran.
-
-#### Perubahan status verifikasi bisnis
-
-- Checkout yang belum dibayar wajib memvalidasi ulang kelayakan pembeli ketika pembayaran dicoba.
-- Jika verifikasi bisnis dicabut dan pembeli tidak lagi memenuhi syarat, pembayaran checkout yang menggunakan aturan B2B harus gagal dan dicatat sebagai kegagalan pembayaran.
-- Order yang sudah dibayar tetap menggunakan snapshot harga dan kuantitas yang telah disimpan.
-
-### 4.4 Moderasi produk
-
-Transisi produk:
-
-- `draft → pending_review` ketika penjual mengirim produk untuk ditinjau.
-- `pending_review → active` ketika admin menyetujui dan seller masih aktif.
-- `pending_review → rejected` ketika admin menolak; `rejection_note` wajib diisi.
-- `rejected → pending_review` ketika penjual mengirim ulang produk setelah revisi.
-- `active → archived` ketika produk diarsipkan.
-
-Ketentuan:
-
-- Produk `active` hanya boleh tampil jika `seller_profiles.status = active`.
-- Query katalog wajib memastikan seller aktif.
-- Produk seller yang disuspend tidak tampil di katalog dan tidak dapat dipesan.
-- Akses manajemen toko oleh seller yang disuspend ditolak.
-- Seller yang disuspend tidak dapat mengubah status pemenuhan order.
-- Produk dengan `order_items` tidak boleh dihapus permanen; gunakan status `archived`.
-- Produk `archived` tidak tampil di katalog dan tidak dapat dipesan, tetapi snapshot pesanan lama tetap tersedia.
+**Anti-fraud tambahan:**
+- Order yang dibuat oleh affiliate sendiri tidak dihitung.
+- Order dengan email pembeli sama dengan email affiliate tidak dihitung.
+- Semua guard di `CommissionService`, bukan hanya di UI.
 
 ---
 
-## 5. Rancangan Database dan Relasi
+## 5. Database
 
-Skema berikut merupakan rancangan target. Struktur final migration wajib disesuaikan dengan hasil audit proyek dan tetap mempertahankan seluruh aturan integritas dokumen ini.
+### 5.1 Tabel existing (dari Fase 2)
+`users`, `business_profiles`, `seller_profiles`, `addresses`, `categories`, `products`, `product_images`, `wholesale_price_tiers`, `cart_items`, `checkouts`, `orders`, `order_items`, `payments`, `digital_products`, `dummy_bills`, `digital_transactions`.
 
-### 5.1 Identitas dan profil
+**Tabel digital_* dibiarkan** (tidak di-drop) — unused, tidak diimplementasikan.
 
-**`users`**
+### 5.2 Migration baru (Fase 5 - Affiliate, Fase 6 - Member)
 
+**`affiliate_profiles`**
 - `id`
-- `name`
-- `email` (unique)
-- `password`
-- `role` (`admin`, `user`)
-- `account_type` (`personal`, `business`)
-- `email_verified_at` (nullable)
-- `timestamps`
+- `user_id` (FK unique → `users`, restrictOnDelete)
+- `referral_code` (unique, 8 char)
+- `status` enum(`active`, `suspended`)
+- timestamps
 
-**`business_profiles`**
-
+**`referrals`**
 - `id`
-- `user_id` (FK, unique)
-- `company_name`
-- `tax_id` (nullable)
-- `phone`
-- `address`
-- `verified_at` (nullable)
-- `verified_by` (FK ke `users`, nullable)
-- `timestamps`
+- `affiliate_id` (FK → `affiliate_profiles`)
+- `referred_user_id` (FK nullable → `users`)
+- `referral_code` (string)
+- `session_id` (string)
+- `landed_at` (timestamp)
+- `checkout_id` (FK nullable → `checkouts`)
+- timestamps
+- index `(affiliate_id, created_at)`, index `referred_user_id`
 
-**`seller_profiles`**
-
+**`commissions`**
 - `id`
-- `user_id` (FK, unique)
-- `seller_type` (`individual`, `business`)
-- `store_name` (unique)
-- `description`
-- `status` (`pending`, `active`, `suspended`)
-- `timestamps`
+- `affiliate_id` (FK → `affiliate_profiles`)
+- `order_id` (FK unique → `orders`)
+- `amount` decimal(15,2)
+- `status` enum(`pending`, `approved`, `cancelled`)
+- `approved_at` (nullable timestamp)
+- `cancelled_at` (nullable timestamp)
+- `cancel_reason` (nullable string)
+- timestamps
+- index `(affiliate_id, status)`
 
-**`addresses`**
+**`users`** — tambah kolom `member_since` (nullable timestamp).
 
-- `id`
-- `user_id` (FK)
-- `label`
-- `recipient_name`
-- `phone`
-- `line1`
-- `city`
-- `province`
-- `postal_code`
-- `is_default`
-- `timestamps`
-
-### 5.2 Katalog
-
-**`categories`**
-
-- `id`
-- `name`
-- `slug` (unique)
-- `parent_id` (self-FK, nullable)
-- `timestamps`
-
-**`products`**
-
-- `id`
-- `seller_profile_id` (FK)
-- `category_id` (FK)
-- `name`
-- `slug` (unique)
-- `description`
-- `price` (`decimal(15,2)`)
-- `stock` (unsigned integer)
-- `sales_channel` (`b2c`, `b2b`, `both`)
-- `min_purchase_qty` (unsigned integer, default 1)
-- `status` (`draft`, `pending_review`, `active`, `rejected`, `archived`)
-- `rejection_note` (nullable)
-- `timestamps`
-
-Index yang direncanakan:
-
-- `(status, category_id)`
-- `(seller_profile_id, status)`
-- `(status, sales_channel)`
-
-**`product_images`**
-
-- `id`
-- `product_id` (FK)
-- `path`
-- `sort_order`
-- `timestamps`
-
-**`wholesale_price_tiers`**
-
-- `id`
-- `product_id` (FK)
-- `min_quantity` (unsigned integer)
-- `price` (`decimal(15,2)`)
-- unique `(product_id, min_quantity)`
-
-### 5.3 Keranjang
-
-**`cart_items`**
-
-- `id`
-- `user_id` (FK)
-- `product_id` (FK)
-- `quantity`
-- unique `(user_id, product_id)`
-- `timestamps`
-
-Keranjang bukan sumber kebenaran harga atau stok. Harga, status produk, kelayakan pembeli, minimum kuantitas, dan stok harus divalidasi ulang saat checkout dan pembayaran.
-
-### 5.4 Checkout dan pesanan
-
-**`checkouts`**
-
-- `id`
-- `user_id` (FK)
-- `reference` (unique)
-- `total_amount` (`decimal(15,2)`)
-- `status` (`pending_payment`, `paid`, `cancelled`)
-- `timestamps`
-
-**`orders`**
-
-- `id`
-- `checkout_id` (FK)
-- `seller_profile_id` (FK)
-- `buyer_id` (FK ke `users`)
-- `subtotal` (`decimal(15,2)`)
-- `status` (`pending_payment`, `pending_processing`, `processing`, `shipped`, `completed`, `cancelled`)
-- `shipping_recipient_name`
-- `shipping_phone`
-- `shipping_line1`
-- `shipping_city`
-- `shipping_province`
-- `shipping_postal_code`
-- `stock_deducted_at` (nullable)
-- `stock_restored_at` (nullable)
-- `refunded_amount` (`decimal(15,2)`, default 0)
-- `refunded_at` (nullable)
-- `timestamps`
-
-Index yang direncanakan:
-
-- `(seller_profile_id, status)`
-- `(buyer_id, status)`
-- `(checkout_id, status)`
-
-**`order_items`**
-
-- `id`
-- `order_id` (FK)
-- `product_id` (FK nullable, `nullOnDelete`)
-- `product_name` (snapshot)
-- `unit_price` (`decimal(15,2)`, snapshot)
-- `quantity`
-- `subtotal` (`decimal(15,2)`, snapshot)
-- `timestamps`
-
-`product_id` boleh menjadi `NULL` jika produk dihapus melalui mekanisme yang diizinkan setelah tidak lagi diperlukan sebagai referensi aktif. Riwayat tetap menggunakan snapshot item.
-
-**`payments`**
-
-- `id`
-- `checkout_id` (FK, unique)
-- `method` (`demo_transfer`, `demo_ewallet`, `demo_va`)
-- `status` (`pending`, `paid`, `failed`)
-- `reference` (unique)
-- `paid_at` (nullable)
-- `failed_at` (nullable)
-- `failure_reason` (nullable)
-- `timestamps`
-
-Satu checkout hanya memiliki satu record payment simulasi. Status payment merupakan sumber kebenaran untuk menentukan apakah checkout masih dapat diproses.
-
-### 5.5 Layanan digital
-
-**`digital_products`**
-
-- `id`
-- `type` (`electricity_bill`, `electricity_token`, `pulse`, `data_package`)
-- `code` (unique)
-- `name`
-- `provider` (nullable)
-- `nominal_value` (`decimal`, nullable)
-- `base_price` (`decimal(15,2)`)
-- `metadata` (JSON)
-- `is_active` (boolean)
-- `timestamps`
-
-**`dummy_bills`**
-
-- `id`
-- `meter_number`
-- `customer_name`
-- `period` (contoh `2025-01`)
-- `amount` (`decimal(15,2)`)
-- `timestamps`
-- unique `(meter_number, period)`
-
-Satu nomor meter boleh memiliki beberapa periode tagihan, tetapi tidak boleh memiliki dua record untuk periode yang sama.
-
-**`digital_transactions`**
-
-- `id`
-- `user_id` (FK)
-- `digital_product_id` (FK nullable)
-- `type` (snapshot tipe produk)
-- `customer_number`
-- `customer_name` (nullable)
-- `amount` (`decimal(15,2)`)
-- `status` (`pending`, `success`, `failed`)
-- `reference` (unique)
-- `token_code` (nullable, dummy)
-- `failure_reason` (nullable)
-- `metadata` (JSON)
-- `timestamps`
-
-Index yang direncanakan:
-
-- `(user_id, created_at)`
-
-Data sensitif seperti nomor meter dan nomor HP tidak boleh dicatat dalam log aplikasi secara penuh.
-
-### 5.6 Sistem
-
-**`activity_logs`**
-
-- `id`
-- `user_id` (FK nullable)
-- `action`
-- `subject_type`
-- `subject_id`
-- `metadata` (JSON)
-- `created_at`
-
-Log tidak menyimpan password, token autentikasi, nomor kartu, PIN, atau PII yang tidak diperlukan.
-
-### 5.7 Constraint dan aturan penghapusan
-
-- Foreign key menggunakan kebijakan pembatasan penghapusan yang sesuai, umumnya `restrictOnDelete()`, kecuali relasi yang secara eksplisit menggunakan `nullOnDelete()`.
-- `users` tidak dihapus permanen melalui alur aplikasi normal.
-- Produk yang sudah memiliki `order_items` tidak boleh dihapus permanen melalui UI.
-- Seller yang memiliki produk atau riwayat pesanan tidak boleh dihapus permanen melalui UI; gunakan suspend.
-- Produk yang diarsipkan tetap mempertahankan riwayat transaksi.
-- Foreign key `order_items.product_id` boleh menjadi `NULL`; snapshot item harus tetap dapat ditampilkan.
-
-### 5.8 Aturan snapshot dan nilai uang
-
-- `order_items` menyimpan snapshot `product_name`, `unit_price`, `quantity`, dan `subtotal`.
-- `orders.shipping_*` menyimpan snapshot alamat penerima pada saat checkout.
-- Perubahan harga produk, nama produk, tier harga, atau alamat setelah checkout tidak mengubah snapshot.
-- Jika pembeli belum memiliki alamat pengiriman, checkout diblokir dengan pesan:
-
-  `Lengkapi alamat pengiriman terlebih dahulu.`
-
-- Gunakan tipe `DECIMAL` untuk nilai uang, bukan floating-point.
-- `order_items.subtotal = unit_price × quantity`.
-- `orders.subtotal = jumlah subtotal item dalam order tersebut`.
-- `checkouts.total_amount = jumlah subtotal seluruh order pada checkout`.
-- Seluruh perhitungan nilai uang harus menggunakan aturan pembulatan yang konsisten.
+### 5.3 Snapshot & constraint
+- Snapshot `order_items` dan `orders.shipping_*` tetap (tidak berubah).
+- FK deletion policy: `restrictOnDelete` default; `commissions.order_id` restrict; `referrals.checkout_id` `nullOnDelete`.
+- Money: `DECIMAL(15,2)`, tidak floating-point.
 
 ---
 
-## 6. Checkout, Pembayaran, Stok, Pembatalan, Refund, dan Layanan Digital
+## 6. Alur Transaksi
 
-### 6.1 Alur checkout
+### 6.1 Checkout
+1. Buyer menambahkan produk (keranjang).
+2. Sistem memvalidasi kelayakan pembeli (B2B), kanal, `min_purchase_qty`.
+3. Sistem menghitung ulang harga per item (retail / tier).
+4. Sistem menerapkan **diskon member 5%** jika buyer aktif member:
+   - Diskon dihitung dari subtotal checkout.
+   - Diskon didistribusikan proporsional ke `orders.subtotal` tiap seller.
+5. Sistem memeriksa stok (soft), alamat (wajib ada).
+6. Sistem membuat `checkouts`, N `orders`, `order_items` dalam 1 transaksi DB.
+7. Snapshot: harga, nama, alamat.
+8. `payments` dibuat dengan status `pending`.
+9. **Jika ada referral aktif di session:** catat `referrals` untuk checkout ini (1 affiliate per checkout).
 
-1. Pembeli memasukkan produk ke keranjang dengan kuantitas minimal 1.
-2. Sistem memvalidasi kelayakan pembeli, kanal penjualan, dan `min_purchase_qty`.
-3. Saat checkout, sistem menghitung ulang harga menggunakan aturan §4.3.
-4. Sistem memeriksa stok awal. Pemeriksaan ini bersifat awal karena stok dapat berubah sebelum pembayaran.
-5. Sistem memastikan pembeli memiliki alamat pengiriman.
-6. Sistem membuat satu record `checkouts`, N record `orders` (satu per seller), dan record `order_items` untuk setiap item.
-7. Sistem menyimpan snapshot harga, nama produk, kuantitas, subtotal, dan alamat.
-8. `checkouts.total_amount` merupakan jumlah seluruh subtotal order dan tidak berubah setelah checkout dibuat.
-9. Sistem membuat satu record `payments` dengan status `pending`.
-10. Pembuatan checkout dan record turunannya dilakukan dalam transaksi database agar tidak menghasilkan checkout parsial.
+### 6.2 Pembayaran simulasi
+- Urutan lock global: `payments → products (id ASC) → orders (id ASC)`.
+- Idempotensi: request kedua pada payment yang sudah diproses → `409 Conflict`.
+- Sukses: decrement stok, `payments.status=paid`, semua `orders=pending_processing`, `checkouts.status=paid`, `orders.stock_deducted_at=now()`.
+- Gagal: rollback, lalu `recordPaymentFailure` (transaksi terpisah), `payments=failed`, `orders=cancelled`, `checkouts=cancelled`.
+- Validasi ulang: harga produk harus sama dengan snapshot, stok cukup, produk & seller aktif, kelayakan buyer masih valid.
 
-Jika validasi gagal sebelum checkout berhasil dibuat, sistem tidak boleh meninggalkan record checkout atau order yang tidak konsisten.
-
-### 6.2 Alur pembayaran simulasi
-
-Endpoint konseptual: `POST /checkout/{ref}/pay`.
-
-**Urutan lock global untuk transaksi multi-tabel:**
-
-`payments → products (ORDER BY id ASC) → orders (ORDER BY id ASC)`
-
-Aturan penerapan:
-
-- Lock hanya baris yang dibutuhkan.
-- Jika transaksi melibatkan beberapa tabel, ikuti urutan lock global tersebut.
-- Jika mengunci beberapa produk atau order, kunci berdasarkan `id ASC`.
-- Setelah lock diperoleh, validasi ulang kondisi bisnis.
-- Operasi yang tidak mengubah suatu tabel tidak perlu mengunci tabel tersebut.
-- Urutan lock mengurangi risiko deadlock, tetapi tidak menjamin deadlock mustahil terjadi.
-
-#### Langkah pembayaran
-
-1. Mulai transaksi database.
-2. Lock record payment yang sesuai dengan checkout menggunakan `SELECT ... FOR UPDATE`.
-3. Pastikan checkout tersebut dimiliki pembeli yang melakukan permintaan.
-4. Periksa status payment. Jika bukan `pending`, batalkan transaksi dan kembalikan `409 Conflict`.
-5. Lock semua produk terkait berdasarkan `id ASC`.
-6. Lock semua order terkait berdasarkan `id ASC`.
-7. Validasi ulang seluruh kondisi berikut di dalam transaksi:
-   - Semua order masih berstatus `pending_payment`.
-   - Semua produk masih `active`.
-   - Semua seller terkait masih `active`.
-   - Pembeli masih memenuhi syarat kanal penjualan.
-   - Kuantitas masih memenuhi `min_purchase_qty` jika berlaku.
-   - Stok mencukupi untuk seluruh item.
-   - Harga hasil `PriceResolver`, menggunakan tipe pembeli dan kuantitas yang sama dengan checkout, masih sama dengan `order_items.unit_price`.
-   - Seluruh nilai snapshot dan total checkout konsisten.
-8. Jalankan salah satu cabang berikut.
-
-#### Cabang sukses
-
-Jika validasi lolos dan pembeli memilih simulasi berhasil:
-
-- Kurangi stok untuk setiap item dalam transaksi yang sama.
-- Isi `orders.stock_deducted_at`.
-- Ubah `orders.status` dari `pending_payment` menjadi `pending_processing`.
-- Ubah `payments.status` dari `pending` menjadi `paid`.
-- Isi `payments.paid_at`.
-- Ubah `checkouts.status` dari `pending_payment` menjadi `paid`.
-- Commit transaksi.
-
-Seluruh perubahan harus berhasil bersama. Jika terjadi kegagalan, seluruh transaksi harus rollback.
-
-#### Cabang gagal
-
-Jika pembeli memilih simulasi gagal atau validasi bisnis gagal:
-
-- Rollback transaksi pembayaran terlebih dahulu.
-- Jangan mengurangi stok.
-- Jangan mengubah status order atau checkout di transaksi yang sudah di-rollback.
-- Jalankan `recordPaymentFailure` dalam transaksi terpisah sesuai §6.3.
-- Kembalikan pesan sesuai alasan kegagalan dan arahkan pembeli membuat checkout baru.
-
-Pesan yang ditampilkan:
-
-- Stok tidak mencukupi: `Stok berubah sejak checkout. Pembayaran disimulasikan gagal; silakan ulangi pesanan.`
-- Harga berubah: `Harga produk berubah sejak checkout. Pembayaran disimulasikan gagal; silakan buat checkout baru.`
-- Produk atau seller tidak aktif: `Produk atau penjual tidak lagi tersedia. Pembayaran disimulasikan gagal; silakan buat checkout baru.`
-- Kelayakan B2B berubah: `Akun tidak lagi memenuhi syarat pembelian grosir. Pembayaran disimulasikan gagal; silakan buat checkout baru.`
-
-Checkout yang sudah gagal dan berstatus `cancelled` tidak dapat dibayar ulang. Pembeli harus membuat checkout baru.
-
-### 6.3 Pencatatan kegagalan pembayaran — `recordPaymentFailure`
-
-**Prinsip:** `payments.status` merupakan sumber kebenaran. Order dan checkout hanya boleh dibatalkan jika perubahan payment dari `pending` ke `failed` benar-benar berhasil.
-
-Gunakan transaksi database terpisah:
-
-1. Mulai transaksi.
-2. Lock payment terkait dengan `SELECT ... FOR UPDATE`.
-3. Jika payment tidak ditemukan, batalkan transaksi dan tangani sebagai resource tidak ditemukan.
-4. Jika `payments.status != pending`, rollback atau selesaikan sebagai no-op tanpa mengubah order maupun checkout.
-5. Update payment menggunakan kondisi tambahan `WHERE status = 'pending'`, dengan mengisi:
-   - `status = failed`
-   - `failure_reason`
-   - `failed_at`
-6. Jika jumlah baris yang terpengaruh bukan 1, jangan mengubah order atau checkout. Batalkan transaksi atau tangani sebagai no-op yang aman.
-7. Lock order terkait berdasarkan `id ASC`, setelah payment terkunci.
-8. Pastikan order terkait masih `pending_payment`. Jika status tidak konsisten, jangan menimpa status order yang sudah berubah; rollback dan catat kondisi tersebut untuk investigasi.
-9. Ubah order yang masih `pending_payment` menjadi `cancelled`.
-10. Ubah checkout menjadi `cancelled` hanya jika masih `pending_payment`.
-11. Commit transaksi.
-
-Kode alasan kegagalan harus konsisten, misalnya:
-
-- `buyer_selected_failure`
-- `insufficient_stock`
-- `price_changed`
-- `product_inactive`
-- `seller_inactive`
-- `buyer_not_eligible`
-- `minimum_quantity_not_met`
-- `checkout_validation_failed`
-
-Kode tersebut merupakan nilai internal. Pesan yang ditampilkan kepada pengguna tetap dalam bahasa Indonesia.
-
-Jika payment sudah `paid` atau `failed`, pemanggilan berikutnya tidak boleh mengubah order atau checkout. Jika operasi pembayaran sukses dan gagal berlangsung bersamaan, lock payment menentukan urutan proses; hasil akhirnya harus konsisten dan tidak boleh menghasilkan payment `paid` dengan order yang dibatalkan oleh alur kegagalan pembayaran.
-
-### 6.4 Pembatalan order, refund, dan restock — `OrderCancellationService`
-
-Penjual pemilik order atau admin menggunakan service yang sama.
-
-#### Precondition
-
-- Pengguna berwenang: admin atau penjual pemilik order.
-- Order berstatus `pending_processing`.
-
-Otorisasi harus dilakukan di server. Precondition harus divalidasi ulang setelah lock diperoleh karena status dapat berubah akibat request bersamaan.
-
-#### Transaksi pembatalan
-
-1. Baca `order_items` untuk mengumpulkan `product_id` unik. Pembacaan awal ini bukan lock dan hanya digunakan untuk menentukan kandidat produk.
-2. Mulai transaksi database.
-3. Lock produk terkait dengan urutan `id ASC`.
-4. Lock record order dengan `SELECT ... FOR UPDATE`.
-5. Validasi ulang:
-   - Jika order sudah `cancelled`, kembalikan hasil `already_cancelled` tanpa mengulang restock atau refund.
-   - Jika status bukan `pending_processing`, batalkan transaksi dengan hasil `invalid_status`.
-   - Jika `stock_deducted_at IS NULL`, perlakukan sebagai kondisi integritas yang tidak valid.
-   - Jika `refunded_at IS NOT NULL`, tolak pemrosesan refund ulang.
-   - Jika `stock_restored_at IS NOT NULL`, tolak restock ulang.
-6. Pastikan produk dan item order sesuai dengan data yang digunakan untuk pengembalian stok.
-7. Tambahkan stok kembali sesuai kuantitas item.
-8. Isi `stock_restored_at`.
-9. Isi `refunded_amount = orders.subtotal`.
-10. Isi `refunded_at`.
-11. Ubah `orders.status` menjadi `cancelled`.
-12. Commit transaksi.
-
-Semua perubahan stok, refund, dan status order harus berhasil bersama atau rollback bersama.
-
-Jika produk sudah tidak tersedia sebagai record aktif, pengembalian stok tidak boleh diam-diam diabaikan. Kondisi tersebut harus ditangani sebagai masalah integritas data dan transaksi dibatalkan kecuali mekanisme pengarsipan tetap mempertahankan record produk.
-
-#### Ketentuan refund
-
-- `payments.status` tidak diubah dan tetap `paid`.
-- `checkouts.status` tidak diubah dan tetap `paid`.
-- Refund dicatat per order.
+### 6.3 Pembatalan & refund (tidak berubah dari Fase 1)
+- `OrderCancellationService` — penjual pemilik atau admin.
+- Lock produk dulu, lalu order; urutan konsisten.
+- Refund & restock atomik.
 - `refunded_amount = orders.subtotal`.
-- Tidak ada ongkir, pajak, atau biaya pembayaran.
-- Label UI:
+- `payments.status` tetap `paid`; `checkouts.status` tetap `paid`.
+- **Efek ke affiliate:** jika order `cancelled` (dari `pending_processing`), `commissions.status=cancelled` (jika sudah ada row) — belum ada karena komisi baru dibuat saat `completed`.
+- Bila order `cancelled` setelah `completed` (tidak mungkin per aturan) → **tidak ada** jalur — ini justru alasan aturan pembatalan dibatasi.
 
-  `Pengembalian dana (simulasi) — tidak ada uang sungguhan yang berpindah.`
+### 6.4 Alur komisi
+- Saat order berpindah ke `completed` (pembeli konfirmasi terima):
+  - `CommissionService::awardForOrder($order)` dijalankan **dalam transaksi DB**.
+  - Cek: `orders.status = completed` (dilakukan pembeli), referral ada, bukan self-referral, bukan email sama.
+  - Buat `commissions` dengan `amount = subtotal × 0.05`, `status=approved`, `approved_at=now()`.
+  - Unique constraint `commissions.order_id` mencegah duplikasi.
 
-Pemanggilan service kedua kali tidak boleh menambah stok atau mencatat refund kedua.
+### 6.5 Status transaksi
 
-### 6.5 Aturan pembatalan
+**`orders.status`** (tidak berubah dari Fase 1):
+`pending_payment → pending_processing → processing → shipped → completed` atau `pending_processing → cancelled`.
 
-| Pelaku | Kondisi | Diizinkan |
-|---|---|---|
-| Pembeli | Checkout `pending_payment` | Membatalkan seluruh checkout |
-| Pembeli | Checkout sudah dibayar | Tidak |
-| Penjual pemilik | Order `pending_processing` | Ya, melalui `OrderCancellationService` |
-| Penjual pemilik | Order `processing`, `shipped`, `completed`, atau `cancelled` | Tidak |
-| Admin | Order `pending_processing` | Ya, melalui `OrderCancellationService` |
-| Admin | Order `processing`, `shipped`, `completed`, atau `cancelled` | Tidak |
+**`commissions.status`:**
+`pending → approved` (saat order completed) atau `pending → cancelled` (saat order cancelled).
 
-Pembatalan checkout sebelum pembayaran harus menggunakan transaksi database, mengunci payment sebelum order sesuai urutan lock global, serta hanya membatalkan checkout jika payment masih `pending`. Jika payment sudah `paid`, pembatalan sebelum bayar harus ditolak.
+**`affiliate_profiles.status`:** `active` ⇄ `suspended` (admin).
 
-Pembatalan order setelah pembayaran tidak boleh dilakukan dengan mengubah seluruh checkout menjadi `cancelled`. Order lain pada checkout yang sama tetap berdiri sendiri.
-
-### 6.6 Layanan digital simulasi
-
-Semua proses dijalankan oleh `DigitalServiceRunner` atau service internal setara. Tidak ada pemanggilan API eksternal.
-
-| Layanan | Input | Validasi | Sumber data | Output simulasi |
-|---|---|---|---|---|
-| Tagihan listrik pascabayar | Nomor meter dan periode | Format nomor; kombinasi meter-periode harus tersedia | `dummy_bills` | Nilai tagihan dan referensi `DUMMY-BILL-...` |
-| Token listrik prabayar | Nomor meter dan nominal | Nomor meter valid; nominal tersedia di `digital_products` | `digital_products` | Token dummy berawalan `DUMMY-TOKEN-` dan penanda simulasi |
-| Pulsa | Nomor HP, operator, nominal | Format HP Indonesia; produk demo aktif | `digital_products` | Referensi `DUMMY-PULSE-...` |
-| Paket data | Nomor HP, operator, paket | Format HP Indonesia; produk demo aktif | `digital_products` | Referensi `DUMMY-DATA-...` |
-
-Ketentuan:
-
-- Hanya produk digital aktif yang dapat digunakan.
-- Input divalidasi di server.
-- Setiap permintaan yang diproses menghasilkan referensi unik.
-- Riwayat transaksi hanya dapat dilihat pemiliknya dan admin sesuai otorisasi.
-- Semua output diberi penanda simulasi.
-- Tidak ada pembayaran uang nyata.
+**`users.member_since`:** NULL → timestamp (aktif). Tidak bisa dibatalkan via UI (bisa manual via DB oleh admin).
 
 ---
 
-## 7. Status Transaksi dan Transisi yang Diizinkan
+## 7. Keamanan
 
-### 7.1 `checkouts.status`
-
-Transisi:
-
-- `pending_payment → paid` ketika payment menjadi `paid`.
-- `pending_payment → cancelled` ketika payment menjadi `failed` atau pembeli membatalkan checkout sebelum pembayaran.
-
-Status `paid` dan `cancelled` bersifat final.
-
-### 7.2 `payments.status`
-
-Transisi:
-
-- `pending → paid`
-- `pending → failed`
-
-Status `paid` dan `failed` bersifat final. Tidak ada status `refunded`.
-
-### 7.3 `orders.status`
-
-Transisi:
-
-- `pending_payment → pending_processing` ketika pembayaran sukses dan validasi lolos.
-- `pending_payment → cancelled` ketika payment gagal atau checkout dibatalkan sebelum pembayaran.
-- `pending_processing → processing` ketika penjual mulai memproses pesanan.
-- `pending_processing → cancelled` ketika penjual atau admin membatalkan order melalui `OrderCancellationService`.
-- `processing → shipped` ketika penjual mengirim pesanan.
-- `shipped → completed` ketika pembeli mengonfirmasi penerimaan.
-
-Tidak ada transisi ke `cancelled` setelah order masuk ke status `processing`, `shipped`, atau `completed`.
-
-Refund simulasi hanya terjadi pada transisi `pending_processing → cancelled`.
-
-### 7.4 `seller_profiles.status`
-
-Status yang digunakan:
-
-- `pending`
-- `active`
-- `suspended`
-
-Transisi:
-
-- `pending → active` ketika admin menyetujui pendaftaran seller.
-- `pending → suspended` ketika admin menolak atau menonaktifkan pendaftaran seller.
-- `active → suspended` ketika admin menangguhkan seller.
-- `suspended → active` ketika admin mengaktifkan kembali seller setelah pemeriksaan.
-
-Status `rejected` tidak digunakan pada tabel ini. Jika diperlukan, alasan penolakan dicatat secara terpisah tanpa memperluas enum status yang telah disepakati.
-
-### 7.5 `products.status`
-
-Transisi:
-
-- `draft → pending_review`
-- `pending_review → active`
-- `pending_review → rejected`
-- `rejected → pending_review`
-- `active → archived`
-
-Produk hanya dapat diaktifkan jika seller berstatus `active`. Produk yang sudah memiliki riwayat order tidak boleh dihapus permanen melalui alur aplikasi normal.
-
-### 7.6 `digital_transactions.status`
-
-Transisi:
-
-- `pending → success`
-- `pending → failed`
-
-Status terminal tidak boleh diubah kembali tanpa keputusan desain baru.
+Wajib:
+- Validasi server-side (FormRequest).
+- Otorisasi via Policy + middleware.
+- IDOR prevention (cek kepemilikan).
+- CSRF, escaping Blade, mass assignment eksplisit.
+- Validasi upload gambar (mime, size, ekstensi).
+- Rate limit login & pembayaran.
+- Transaksi DB untuk stok/pembayaran/refund/komisi.
+- **Self-referral & fraud guard di `CommissionService`.**
+- Tidak menyimpan PII di log.
+- Jangan minta/baca `.env` asli.
 
 ---
 
-## 8. Keamanan
+## 8. Acceptance Criteria
 
-- Gunakan validasi server-side melalui FormRequest atau mekanisme validasi Laravel yang sesuai.
-- Terapkan otorisasi melalui Policy dan middleware, termasuk middleware admin dan pemeriksaan seller aktif.
-- Cegah IDOR dengan memvalidasi kepemilikan resource untuk setiap akses.
-- Gunakan proteksi CSRF Laravel.
-- Gunakan Eloquent atau query parameterized; hindari raw SQL tanpa binding.
-- Atur mass assignment secara eksplisit melalui `$fillable` atau mekanisme setara yang aman.
-- Gunakan escaping Blade (`{{ }}`) untuk konten pengguna.
-- Validasi upload berdasarkan MIME, ekstensi, ukuran, dan nama file yang dibuat server.
-- Simpan gambar di `storage/app/public` dan gunakan mekanisme storage Laravel.
-- Batas gambar produk: maksimal 5 gambar, 2 MB per gambar, format JPG/JPEG, PNG, atau WebP.
-- Terapkan rate limit pada endpoint login, pembayaran, dan endpoint sensitif lainnya.
-- Validasi status dan transisi status di server, bukan hanya di UI.
-- Gunakan transaksi database untuk operasi stok, pembayaran, checkout, pembatalan, dan refund.
-- Redaksi nomor meter, nomor HP, alamat, `tax_id`, dan PII lain dari log aplikasi.
-- Jangan menyimpan password, token autentikasi, PIN, CVV, atau kredensial pembayaran.
-- Jangan meminta atau membagikan `.env` asli. Audit konfigurasi melalui `.env.example` dan informasi yang telah disanitasi.
-- Jangan mengklaim keamanan konkurensi hanya berdasarkan penggunaan transaksi; pengujian harus mencakup request bersamaan pada MySQL.
+### 8.1 Fungsional dasar (dari Fase 1)
+- [ ] Registrasi & auth buyer.
+- [ ] Pengajuan seller profile & business profile.
+- [ ] Verifikasi bisnis oleh admin.
+- [ ] Moderasi produk (`pending_review → active/rejected`).
+- [ ] Checkout multi-seller (N orders).
+- [ ] Pembayaran sukses/gagal.
+- [ ] Pembatalan & refund dengan `refunded_amount = subtotal`.
+- [ ] Double-payment → `409`, stok tidak berubah dua kali.
 
----
+### 8.2 B2B
+- [ ] Produk `b2b` tidak tampil untuk non-verifikasi.
+- [ ] `min_purchase_qty` hanya untuk bisnis terverifikasi.
+- [ ] Tier harga terpilih benar pada batas.
 
-## 9. Acceptance Criteria
+### 8.3 Member
+- [ ] Aktivasi member via `/akun/member`.
+- [ ] Diskon 5% teraplikasi di checkout member.
+- [ ] Badge "Member" tampil di UI.
+- [ ] Non-member tidak mendapat diskon.
 
-Seluruh kriteria berikut harus diuji minimal pada Fase 7. Status checklist hanya boleh diubah menjadi selesai setelah tersedia bukti implementasi dan hasil pengujian.
+### 8.4 Affiliate
+- [ ] Aktivasi affiliate → dapat referral code.
+- [ ] Klik link dengan `?ref=CODE` menyimpan atribusi (session+cookie).
+- [ ] Checkout dengan referral mencatat `referrals`.
+- [ ] Order completed → komisi 5% dibuat otomatis.
+- [ ] Order cancelled sebelum completed → tidak ada komisi (atau `cancelled` jika sudah ada).
+- [ ] Self-referral diblokir (order tidak dikomisikan).
+- [ ] Duplikasi komisi untuk 1 order ditolak (unique constraint).
+- [ ] Dashboard affiliate menampilkan komisi nyata dari DB.
 
-### 9.1 Fungsional
-
-- [ ] Registrasi dan autentikasi buyer berjalan.
-- [ ] Pengajuan profil seller individu dan bisnis berjalan.
-- [ ] Verifikasi bisnis oleh admin mengaktifkan akses harga grosir.
-- [ ] Produk C2C dan B2C mengikuti moderasi.
-- [ ] Produk berstatus `rejected` tidak tampil di katalog.
-- [ ] Checkout menolak kuantitas di bawah `min_purchase_qty` untuk buyer bisnis pada produk B2B.
-- [ ] `PriceResolver` menghasilkan harga tier yang benar pada batas kuantitas.
-- [ ] Checkout multi-penjual menghasilkan N order berdasarkan seller.
-- [ ] Pembatalan satu order tidak membatalkan order lain dalam checkout yang sama.
-- [ ] Pembayaran ganda menghasilkan satu hasil final; request yang tidak lagi valid menerima `409 Conflict`.
-- [ ] Buyer tidak dapat mengakses order, checkout, atau resource pribadi milik pengguna lain.
-- [ ] Seller tidak dapat mengubah produk atau order seller lain.
-- [ ] Non-admin tidak dapat mengakses fitur admin.
-- [ ] Tagihan listrik menggunakan data `dummy_bills`.
-- [ ] Token listrik selalu ditandai dummy dan simulasi.
-- [ ] Input layanan digital dengan format tidak valid ditolak.
-- [ ] Riwayat transaksi digital hanya menampilkan transaksi yang diizinkan untuk pengguna tersebut.
-- [ ] UI responsif pada lebar 375 px, tablet, dan desktop.
-- [ ] Banner "Mode Simulasi" tampil pada semua halaman transaksi.
-
-### 9.2 Aturan B2B, B2C, dan C2C
-
-- [ ] Produk `sales_channel = b2b` tidak tampil untuk buyer personal dan bisnis yang belum terverifikasi.
-- [ ] Akses langsung ke halaman produk B2B oleh buyer yang tidak memenuhi syarat menghasilkan 404.
-- [ ] `CartService` dan `CheckoutService` menolak pembelian B2B yang tidak memenuhi syarat.
-- [ ] `min_purchase_qty` hanya berlaku pada buyer bisnis terverifikasi untuk produk `b2b` atau `both`.
-- [ ] Harga tier yang tepat dipilih pada batas kuantitas, termasuk ketika kuantitas sama dengan `min_quantity`.
-- [ ] Perubahan verifikasi bisnis sebelum pembayaran divalidasi ulang.
-- [ ] Penjual individu tidak dapat membuat produk dengan kanal `b2b` atau `both`.
-
-### 9.3 Integritas stok dan transaksi
-
-- [ ] Perubahan harga setelah checkout membuat pembayaran gagal dan stok tidak berubah.
-- [ ] Perubahan tier grosir setelah checkout membuat pembayaran gagal jika harga hasil resolusi berubah.
-- [ ] Dua request pembayaran bersamaan hanya menghasilkan satu decrement stok.
-- [ ] Request pembayaran kedua setelah status berubah tidak mengubah transaksi dan menerima respons konflik yang sesuai.
-- [ ] Refund dan restock tidak dapat diproses dua kali.
-- [ ] `stock_restored_at` dan `refunded_at` hanya terisi sekali.
-- [ ] Admin tidak dapat membatalkan order berstatus `processing`, `shipped`, atau `completed`.
-- [ ] Seller tidak dapat membatalkan order milik seller lain.
-- [ ] Jika operasi restock gagal, seluruh transaksi pembatalan rollback.
-- [ ] Saat rollback pembatalan, status order tetap `pending_processing`, `stock_restored_at` tetap NULL, dan `refunded_at` tetap NULL.
-- [ ] Perubahan harga produk atau penghapusan alamat tidak mengubah snapshot `order_items` dan `orders.shipping_*`.
-- [ ] Checkout dengan produk yang tidak aktif atau seller yang tidak aktif gagal tanpa mengurangi stok.
-- [ ] `UPDATE payments ... WHERE status = 'pending'` yang tidak mengubah satu baris pun tidak boleh diikuti perubahan order atau checkout.
-- [ ] Hasil akhir request pembayaran sukses dan gagal yang berjalan bersamaan selalu konsisten.
-- [ ] Refund `refunded_amount` sama dengan `orders.subtotal`, tanpa komponen lain.
-- [ ] Pembatalan checkout sebelum pembayaran tidak dapat membatalkan checkout yang payment-nya sudah `paid`.
-- [ ] Order dari seller berbeda dapat dibatalkan secara independen sesuai statusnya.
-- [ ] Lock beberapa produk dan order menggunakan urutan `id ASC`.
-- [ ] Pengujian konkurensi dilakukan pada MySQL, bukan hanya mengandalkan SQLite.
-- [ ] Kegagalan transaksi dan deadlock tidak meninggalkan perubahan stok atau status parsial.
-
-### 9.4 Kualitas dan UI
-
-- [ ] Setiap form memiliki label, validasi, dan pesan error yang jelas.
-- [ ] Loading, empty, error, dan disabled state tersedia pada interaksi yang relevan.
-- [ ] Kontras teks memenuhi rasio minimal 4.5:1 jika berlaku untuk teks normal.
-- [ ] Dialog dan interaksi utama dapat digunakan dengan navigasi keyboard.
-- [ ] Tidak ada emoji yang digunakan sebagai ikon antarmuka.
-- [ ] Semua alur transaksi memberi penanda simulasi secara jelas.
-- [ ] Tidak ada fitur yang diklaim selesai tanpa implementasi dan pengujian yang dapat diverifikasi.
+### 8.5 UX
+- [ ] Mobile-first: bottom nav buyer, drawer admin/seller.
+- [ ] Tidak ada horizontal overflow di 375 px.
+- [ ] Loading, empty, error, success state.
+- [ ] Ikon konsisten (Heroicons).
 
 ---
 
-## 10. Keputusan Final Fase 1
+## 9. Keputusan Final (disetujui 23 Okt 2026, direvisi 27 Okt 2026)
 
-Keputusan berikut sudah disetujui dan tidak boleh diubah tanpa persetujuan baru:
+Fase 1 (dari versi sebelumnya) tetap berlaku untuk backend core (checkout, payment, refund, urutan lock, snapshot). Tambahan v2.0:
 
-1. Laravel + MySQL, modular monolith, Blade + Tailwind, dan Breeze.
-2. Satu tabel `users` menggunakan `role` dan `account_type`; kapabilitas seller dikelola melalui `seller_profiles`.
-3. Produk `b2b` tidak dapat dibeli oleh pembeli yang belum terverifikasi; tidak ada fallback ke harga konsumen.
-4. `min_purchase_qty` hanya berlaku untuk buyer bisnis terverifikasi pada produk `b2b` atau `both`.
-5. `payments.status` hanya terdiri dari `pending`, `paid`, dan `failed`.
-6. Tidak ada status `refunded` pada payment.
-7. Refund dicatat per order melalui `orders.refunded_amount` dan `orders.refunded_at`.
-8. `checkouts.status` hanya terdiri dari `pending_payment`, `paid`, dan `cancelled`.
-9. Pembeli tidak dapat membatalkan order setelah pembayaran berhasil.
-10. Pembatalan order berbayar hanya diperbolehkan dari `pending_processing`, oleh seller pemilik atau admin, melalui `OrderCancellationService`.
-11. `OrderCancellationService` mengunci produk terlebih dahulu, kemudian order, serta memvalidasi ulang status setelah lock.
-12. Urutan lock global transaksi multi-tabel adalah `payments → products → orders`; baris dalam setiap kelompok produk/order dikunci berdasarkan `id ASC`.
-13. Refund dan restock merupakan satu transaksi atomik.
-14. Snapshot harga, item, dan alamat bersifat immutable setelah checkout.
-15. Harga, stok, kelayakan buyer, status produk, dan status seller divalidasi ulang saat pembayaran.
-16. `recordPaymentFailure` hanya mengubah payment `pending → failed`; order dan checkout hanya dibatalkan jika perubahan tersebut berhasil dan status terkait masih valid.
-17. `dummy_bills` memiliki unique constraint pada `(meter_number, period)`.
-18. Produk hanya tersedia jika produk dan seller sama-sama aktif.
-19. Hard delete produk dengan riwayat order dilarang melalui alur aplikasi normal.
-20. Rumus refund adalah `refunded_amount = orders.subtotal`, tanpa ongkir atau pajak.
-21. File `.env` asli tidak pernah diminta atau dibagikan.
-22. Status dan checklist implementasi harus didasarkan pada bukti aktual, bukan hanya isi dokumen.
-23. Database: MySQL 8.0+ atau MariaDB 10.4+ (kompatibel). Lingkungan pengembangan saat ini menggunakan MariaDB 10.4.32 dan disetujui pada 23 Oktober 2026.
+23. **2 jenis perdagangan:** B2C + B2B. C2C sebagai jenis terpisah **dihapus**; seller individu diperlakukan sebagai bagian B2C.
+24. **3 model bisnis:** Member, Affiliate, Seller.
+25. **Digital services** (tagihan, token, pulsa, data) **dihapus dari scope**; 3 tabel DB dibiarkan unused.
+26. **Member:** diskon flat 5%, tanpa poin/tier berjenjang.
+27. **Affiliate:** komisi 5% × subtotal, trigger `completed`, first-touch 30 hari, self-referral diblokir, 1 order → 1 komisi.
+28. Tabel baru: `affiliate_profiles`, `referrals`, `commissions`; kolom baru: `users.member_since`.
 
 ---
 
-## 11. Keputusan yang Masih Terbuka
-
-Hal-hal berikut belum final. Gunakan nilai default sampai ada keputusan baru.
+## 10. Keputusan yang Masih Terbuka
 
 1. **Auto-expire checkout `pending_payment`:** default tidak ada TTL.
-2. **Pembatalan checkout oleh buyer sebelum pembayaran:** default membatalkan seluruh checkout, bukan satu order.
-3. **Notifikasi pembatalan kepada buyer:** default hanya badge atau informasi pada halaman riwayat.
-4. **Cakupan `activity_logs`:** opsional pada Fase 7, tanpa PII yang tidak diperlukan.
-5. **Batas gambar produk:** default 5 gambar, maksimal 2 MB per gambar, format JPG/JPEG, PNG, dan WebP.
-6. **Wewenang admin terhadap order berbayar yang macet:** default sama dengan seller, hanya dapat membatalkan order `pending_processing`.
-7. **Versi framework:** asumsi awal Laravel 12.x, harus diverifikasi pada audit Fase 2.
-8. **Pencatatan alasan penolakan pendaftaran seller:** status menggunakan `suspended`; kolom atau mekanisme pencatatan alasan akan ditentukan saat audit dan implementasi tanpa menambahkan status `rejected` ke `seller_profiles`.
-
-Setiap perubahan keputusan final harus disetujui terlebih dahulu, lalu diperbarui secara konsisten di `PROJECT_SPEC.md`, `IMPLEMENTATION_PLAN.md`, `AI_RULES.md`, dan `PROGRESS.md` jika relevan.
+2. **Pembatalan checkout sebelum bayar:** default membatalkan seluruh checkout.
+3. **Notifikasi pembatalan:** default badge di riwayat.
+4. **Batas gambar produk:** default 5 gambar, max 2 MB.
+5. **Wewenang admin force-cancel:** default hanya `pending_processing`.
+6. **Batas komisi affiliate:** default tidak ada (tanpa cap). Bisa ditambah bila ada kebutuhan.
+7. **Membership lifetime:** default seumur akun. Bisa ditambah expiry bila perlu.
+8. **Pencatatan alasan penolakan seller:** status `suspended`, alasan di luar enum.
