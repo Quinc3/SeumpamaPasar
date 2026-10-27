@@ -29,7 +29,7 @@ class OrderCancellationService
             if ($locked->status === OrderStatus::Cancelled) {
                 return 'already_cancelled';
             }
-            if ($locked->status !== OrderStatus::PendingProcessing) {
+            if (! in_array($locked->status, [OrderStatus::PendingProcessing, OrderStatus::Processing], true)) {
                 return 'invalid_status';
             }
             if ($locked->stock_deducted_at === null) {

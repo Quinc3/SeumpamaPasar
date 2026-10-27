@@ -3,6 +3,7 @@
 @section('title', 'Edit Produk')
 
 @section('content')
+<x-page-wrapper>
     @if (session('status'))
         <x-alert variant="success">Perubahan disimpan.</x-alert>
     @endif
@@ -158,4 +159,5 @@
     @else
         <x-alert variant="info">Produk ini sudah diarsipkan.</x-alert>
     @endif
+</x-page-wrapper>
 @endsection

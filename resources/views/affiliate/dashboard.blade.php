@@ -3,6 +3,7 @@
 @section('title', 'Dashboard Afiliasi')
 
 @section('content')
+<x-page-wrapper>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <x-card>
             <p class="text-xs uppercase tracking-wide text-surface-500">Kode Referral</p>
@@ -48,4 +49,5 @@
             <p class="text-sm text-surface-700">Total referral: <strong>{{ $affiliate->referrals->count() }}</strong></p>
         @endif
     </x-card>
+</x-page-wrapper>
 @endsection

@@ -3,6 +3,7 @@
 @section('title', 'Pesanan Masuk')
 
 @section('content')
+<x-page-wrapper>
     @if ($orders->isEmpty())
         <x-card padding="none">
             <x-empty-state icon="truck" title="Belum ada pesanan" description="Pesanan dari pembeli akan muncul di sini." />
@@ -29,4 +30,5 @@
         </div>
         <div class="pt-2">{{ $orders->links() }}</div>
     @endif
+</x-page-wrapper>
 @endsection

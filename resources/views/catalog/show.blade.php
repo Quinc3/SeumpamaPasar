@@ -48,11 +48,13 @@
                                 Diskon Member 5%
                             </span>
                         @endif
-                        @if ($product->stock > 0)
-                            <span class="text-xs text-surface-500">Stok {{ $product->stock }}</span>
-                        @else
-                            <span class="text-xs text-red-600 font-medium">Habis</span>
-                        @endif
+                        @if (auth()->user()?->role === \App\Enums\UserRole::Admin)
+                    <x-alert variant="info">Anda login sebagai admin. Hanya dapat melihat, tidak dapat membeli.</x-alert>
+                @elseif ($product->stock > 0)
+                    {{-- form tambah keranjang yang sudah ada --}}
+                @else
+                    <x-alert variant="warning">Produk sedang habis.</x-alert>
+                @endif
                     </div>
 
                     @if ($isMember && $memberDiscount > 0)

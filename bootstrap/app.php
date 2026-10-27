@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
             'seller.active' => \App\Http\Middleware\EnsureSellerActive::class,
+            'not.admin' => \App\Http\Middleware\EnsureNotAdmin::class,
         ]);
 
         $middleware->web(append: [

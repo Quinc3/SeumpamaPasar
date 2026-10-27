@@ -33,12 +33,14 @@
                 </form>
 
                 <div class="flex items-center gap-1">
-                    <a href="{{ $u ? route('cart.index') : route('login') }}" class="relative p-2 rounded-md hover:bg-white/10" aria-label="Keranjang">
-                        <x-icon name="shopping-cart" size="lg" />
-                        @if ($cartCount > 0)
-                            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-primary-700 text-[10px] font-semibold flex items-center justify-center">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
-                        @endif
-                    </a>
+                @unless ($u?->role === \App\Enums\UserRole::Admin)
+                        <a href="{{ $u ? route('cart.index') : route('login') }}" class="relative p-2 rounded-md hover:bg-white/10" aria-label="Keranjang">
+                            <x-icon name="shopping-cart" size="lg" />
+                            @if ($cartCount > 0)
+                                <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-primary-700 text-[10px] font-semibold flex items-center justify-center">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
+                            @endif
+                        </a>
+                    @endunless
 
                     @auth
                         <x-user-menu />

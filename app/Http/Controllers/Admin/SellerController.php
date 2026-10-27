@@ -27,10 +27,28 @@ class SellerController extends Controller
         return back()->with('status', 'approved');
     }
 
-    public function suspend(SellerProfile $seller): RedirectResponse
+    public function suspend(SellerProfile $seller, \App\Services\OrderCancellationService $cancellation): RedirectResponse
     {
+        $orders = $seller->orders()
+            ->whereIn('status', ['pending_processing', 'processing'])
+            ->get();
+
+        $cancelled = 0;
+        foreach ($orders as $order) {
+            $result = $cancellation->cancel($order);
+            if ($result === 'cancelled') {
+                $cancelled++;
+            }
+        }
+
         $seller->forceFill(['status' => SellerStatus::Suspended->value])->save();
-        return back()->with('status', 'suspended');
+
+        $msg = 'Penjual ditangguhkan.';
+        if ($cancelled > 0) {
+            $msg .= " {$cancelled} pesanan aktif dibatalkan & stok dikembalikan.";
+        }
+
+        return back()->with('status', $msg);
     }
 
     public function activate(SellerProfile $seller): RedirectResponse

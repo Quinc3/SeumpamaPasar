@@ -3,6 +3,7 @@
 @section('title', 'Produk Baru')
 
 @section('content')
+<x-page-wrapper>
     @if ($errors->any())
         <x-alert variant="danger">Periksa kembali isian form.</x-alert>
     @endif
@@ -87,4 +88,5 @@
             </p>
         </form>
     </x-card>
+</x-page-wrapper>
 @endsection

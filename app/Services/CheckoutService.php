@@ -82,7 +82,8 @@ class CheckoutService
                 foreach ($sellerItems as $item) {
                     $resolved = $this->priceResolver->resolve($user, $item->product, $item->quantity);
                     $unitPrice = $resolved['unit_price'];
-                    if ($isMember) {
+                    // Diskon member hanya untuk produk B2C retail (mencegah dobel diskon dengan tier grosir)
+                    if ($isMember && $item->product->sales_channel === \App\Enums\SalesChannel::B2C) {
                         $unitPrice = round($unitPrice * 0.95, 2);
                     }
                     $lineTotal = round($unitPrice * $item->quantity, 2);

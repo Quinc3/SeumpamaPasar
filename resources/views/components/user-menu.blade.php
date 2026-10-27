@@ -18,23 +18,24 @@
         </div>
 
         <div class="py-1">
-            <a href="{{ route('profile.show') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
-                <x-icon name="user" size="sm" class="text-surface-500" /> Profil Saya
-            </a>
-            @if ($user->sellerProfile && $user->sellerProfile->status === \App\Enums\SellerStatus::Active)
-                <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
-                    <x-icon name="home" size="sm" class="text-surface-500" /> Toko Saya
-                </a>
-            @endif
-            @if ($user->affiliateProfile)
-                <a href="{{ route('affiliate.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
-                    <x-icon name="arrow-path" size="sm" class="text-surface-500" /> Afiliasi
-                </a>
-            @endif
             @if ($user->role === \App\Enums\UserRole::Admin)
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
-                    <x-icon name="check-circle" size="sm" class="text-surface-500" /> Admin Panel
+                    <x-icon name="check-circle" size="sm" class="text-amber-600" /> Admin Panel
                 </a>
+            @else
+                <a href="{{ route('profile.show') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                    <x-icon name="user" size="sm" class="text-surface-500" /> Profil Saya
+                </a>
+                @if ($user->sellerProfile && $user->sellerProfile->status === \App\Enums\SellerStatus::Active)
+                    <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                        <x-icon name="home" size="sm" class="text-surface-500" /> Toko Saya
+                    </a>
+                @endif
+                @if ($user->affiliateProfile)
+                    <a href="{{ route('affiliate.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                        <x-icon name="arrow-path" size="sm" class="text-surface-500" /> Afiliasi
+                    </a>
+                @endif
             @endif
         </div>
 

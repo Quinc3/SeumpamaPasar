@@ -3,6 +3,7 @@
 @section('title', 'Detail Pesanan')
 
 @section('content')
+<x-page-wrapper>
     @if (session('status'))
         <x-alert variant="success">Aksi berhasil.</x-alert>
     @endif
@@ -73,4 +74,5 @@
             @endif
         </div>
     </div>
+</x-page-wrapper>
 @endsection

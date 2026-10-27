@@ -3,18 +3,21 @@
 @section('title', 'Produk Saya')
 
 @section('content')
+<x-page-wrapper>
     @if (session('status'))
         <x-alert variant="success">Perubahan disimpan.</x-alert>
     @endif
 
     <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-surface-900">Produk</h2>
-        <a href="{{ route('seller.products.create') }}">
-            <x-primary-button type="button">
-                <x-icon name="plus" size="sm" class="mr-1.5" />
-                Produk Baru
-            </x-primary-button>
-        </a>
+        @if ($products->isNotEmpty())
+            <a href="{{ route('seller.products.create') }}">
+                <x-primary-button type="button">
+                    <x-icon name="plus" size="sm" class="mr-1.5" />
+                    Produk Baru
+                </x-primary-button>
+            </a>
+        @endif
     </div>
 
     @if ($products->isEmpty())
@@ -63,4 +66,5 @@
         </div>
         <div class="pt-2">{{ $products->links() }}</div>
     @endif
+</x-page-wrapper>
 @endsection

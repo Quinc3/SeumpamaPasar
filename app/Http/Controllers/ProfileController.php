@@ -15,9 +15,13 @@ class ProfileController extends Controller
      * Display the user's profile form.
      */
 
-    public function show(Request $request): \Illuminate\Contracts\View\View
+    public function show(Request $request)
     {
         $user = $request->user();
+
+        if ($user->role === \App\Enums\UserRole::Admin) {
+            return redirect()->route('admin.dashboard');
+        }
 
         return view('profile.show', [
             'user' => $user,

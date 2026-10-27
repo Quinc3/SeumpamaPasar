@@ -75,7 +75,7 @@ class PaymentService
 
                 $resolved = $this->priceResolver->resolve($buyer, $product, $item->quantity);
                 $expected = $resolved['unit_price'];
-                if ($isMember) {
+                if ($isMember && $product->sales_channel === \App\Enums\SalesChannel::B2C) {
                     $expected = round($expected * 0.95, 2);
                 }
                 if (abs($expected - (float) $item->unit_price) > 0.01) {
