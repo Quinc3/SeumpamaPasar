@@ -68,14 +68,14 @@
                     <p class="text-xs text-surface-500 mt-1.5">Tunjukkan kode ini di kasir {{ ucfirst(str_replace('retail_', '', $method)) }}</p>
                     <p class="text-xs text-surface-400 mt-1">Simulasi — tidak ada transaksi nyata</p>
                 </div>
-            @elseif (str_starts_with($method, 'ewallet_'))
+                @elseif (str_starts_with($method, 'ewallet_') && $method !== 'ewallet_seumpamapay')
+                @php $provider = ucfirst(str_replace('ewallet_', '', $method)); @endphp
                 <div class="text-center pb-4 border-b border-surface-200 mb-4">
                     <div class="inline-flex items-center gap-2 justify-center">
-                        <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-primary-700 text-white text-[10px] font-bold">SP</span>
-                        <span class="text-sm font-semibold text-surface-900">{{ ucfirst(str_replace('ewallet_', '', $method)) }}</span>
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-surface-300 text-white text-[10px] font-bold">{{ strtoupper(substr($provider, 0, 2)) }}</span>
+                        <span class="text-sm font-semibold text-surface-900">{{ $provider }}</span>
                     </div>
-                    <p class="text-2xl sm:text-3xl font-mono font-bold text-primary-700 tracking-wider mt-2">{{ $ewalletNumber }}</p>
-                    <p class="text-xs text-surface-500 mt-1.5">a.n. {{ $user->name }}</p>
+                    <p class="text-sm text-surface-600 mt-3">Buka aplikasi <strong>{{ $provider }}</strong> di HP Anda untuk melanjutkan pembayaran.</p>
                     <p class="text-xs text-surface-400 mt-1">Simulasi — tidak ada transaksi nyata</p>
                 </div>
             @endif

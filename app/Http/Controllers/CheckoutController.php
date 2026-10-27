@@ -81,10 +81,11 @@ class CheckoutController extends Controller
             'total' => $baseSubtotal,
             'methods' => $methods,
             'selectedIds' => $items->pluck('id')->all(),
+            'walletBalance' => (float) ($user->wallet?->balance ?? 0),
         ]);
     }
 
-    public function store(Request $request, CheckoutService $service): RedirectResponse
+    public function store(Request $request, CheckoutService $service, PaymentService $paymentService, \App\Services\WalletService $walletService): RedirectResponse
     {
         $data = $request->validate([
             'address_id' => ['required', 'integer'],
@@ -105,29 +106,76 @@ class CheckoutController extends Controller
             $checkout = $service->createFromCart($request->user(), $address, $data['cart_item_ids']);
             $checkout->payment->update(['method' => $data['method']]);
 
+            // SeumpamaPay: cek saldo → debit → settle
+            if ($data['method'] === 'ewallet_seumpamapay') {
+                $balance = $walletService->balance($request->user());
+                $total = (float) $checkout->total_amount;
+
+                if ($balance < $total) {
+                    return redirect()->route('wallet.topup', ['return_to' => $checkout->reference])
+                        ->with('error', 'Saldo SeumpamaPay kurang Rp ' . number_format($total - $balance, 0, ',', '.') . '. Top up dulu.');
+                }
+
+                try {
+                    $walletService->debit($request->user(), $total, 'payment', 'Checkout ' . $checkout->reference, $checkout);
+                } catch (\Throwable $e) {
+                    return back()->withErrors(['checkout' => 'Gagal debit saldo: ' . $e->getMessage()]);
+                }
+
+                $result = $paymentService->settle($checkout, true);
+
+                if ($result !== 'success') {
+                    // Credit back kalau settle gagal
+                    $walletService->credit($request->user(), $total, 'refund', 'Refund otomatis: ' . $checkout->reference, $checkout);
+                }
+
+                return redirect()->route('checkout.result', $checkout->reference);
+            }
+
             return redirect()->route('checkout.pay', $checkout->reference);
         } catch (RuntimeException $e) {
             return back()->withErrors(['checkout' => $e->getMessage()])->withInput();
         }
     }
 
-    public function showPay(Request $request, Checkout $checkout, PaymentService $paymentService): View|RedirectResponse
+    public function showPay(Request $request, Checkout $checkout, PaymentService $paymentService, \App\Services\WalletService $walletService): View|RedirectResponse
     {
         abort_unless($checkout->user_id === $request->user()->id, 403);
-
-        $checkout->load('payment');
+        $checkout->load(['payment', 'orders.items']);
 
         if ($checkout->status !== \App\Enums\CheckoutStatus::PendingPayment) {
             return redirect()->route('checkout.result', $checkout->reference);
         }
 
-        // Auto-fail kalau expired
         if ($checkout->payment->status === \App\Enums\PaymentStatus::Pending && $checkout->payment->isExpired()) {
             $paymentService->recordFailure($checkout->id, 'expired');
             return redirect()->route('checkout.result', $checkout->reference);
         }
 
-        $checkout->load(['orders.items']);
+        // SeumpamaPay: auto-settle (misal baru balik dari topup)
+        if ($checkout->payment->method === 'ewallet_seumpamapay' && $checkout->payment->status === \App\Enums\PaymentStatus::Pending) {
+            $balance = $walletService->balance($request->user());
+            $total = (float) $checkout->total_amount;
+
+            if ($balance < $total) {
+                return redirect()->route('wallet.topup', ['return_to' => $checkout->reference])
+                    ->with('error', 'Saldo masih kurang Rp ' . number_format($total - $balance, 0, ',', '.') . '.');
+            }
+
+            try {
+                $walletService->debit($request->user(), $total, 'payment', 'Checkout ' . $checkout->reference, $checkout);
+            } catch (\Throwable $e) {
+                return redirect()->route('checkout.result', $checkout->reference);
+            }
+
+            $result = $paymentService->settle($checkout, true);
+            if ($result !== 'success') {
+                $walletService->credit($request->user(), $total, 'refund', 'Refund otomatis: ' . $checkout->reference, $checkout);
+            }
+
+            return redirect()->route('checkout.result', $checkout->reference);
+        }
+
         return view('checkout.pay', compact('checkout'));
     }
 

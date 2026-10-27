@@ -53,11 +53,21 @@
                             <div>
                                 <p class="text-xs uppercase tracking-wide text-surface-500 mb-2">{{ $groupName }}</p>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    @foreach ($groupMethods as $value => $label)
+                                @foreach ($groupMethods as $value => $label)
                                         <label class="flex items-center gap-2.5 p-2.5 border border-surface-200 rounded-md cursor-pointer hover:bg-surface-50 has-[:checked]:border-primary-500 has-[:checked]:bg-primary-50">
                                             <input type="radio" name="method" value="{{ $value }}" class="text-primary-600 focus:ring-primary-500"
                                                    @checked($loop->parent->first && $loop->first) required>
-                                            <span class="text-sm text-surface-900">{{ $label }}</span>
+                                            <div class="flex-1 min-w-0">
+                                                <span class="text-sm text-surface-900 block">{{ $label }}</span>
+                                                @if ($value === 'ewallet_seumpamapay')
+                                                    <span class="text-xs {{ ($walletBalance ?? 0) < $total ? 'text-red-600 font-medium' : 'text-surface-500' }} block mt-0.5">
+                                                        Saldo: Rp {{ number_format($walletBalance ?? 0, 0, ',', '.') }}
+                                                        @if (($walletBalance ?? 0) < $total)
+                                                            — kurang Rp {{ number_format($total - $walletBalance, 0, ',', '.') }}
+                                                        @endif
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </label>
                                     @endforeach
                                 </div>

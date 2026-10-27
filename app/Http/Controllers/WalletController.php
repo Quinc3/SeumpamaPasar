@@ -25,8 +25,9 @@ class WalletController extends Controller
     {
         $user = $request->user();
         $wallet = $this->wallet->getOrCreate($user);
+        $returnTo = $request->query('return_to');
 
-        return view('wallet.topup', compact('wallet'));
+        return view('wallet.topup', compact('wallet', 'returnTo'));
     }
 
     public function submitTopup(Request $request): RedirectResponse
@@ -35,10 +36,11 @@ class WalletController extends Controller
             'amount' => ['required', 'integer', 'min:10000', 'max:10000000'],
             'method' => ['required', 'in:va_bca,va_bni,va_bri,va_mandiri,va_bsi'],
             'outcome' => ['required', 'in:success,fail'],
+            'return_to' => ['nullable', 'string', 'max:50'],
         ]);
 
         if ($data['outcome'] === 'fail') {
-            return redirect()->route('wallet.index')
+            return redirect()->route('wallet.topup', ['return_to' => $data['return_to'] ?? null])
                 ->with('error', 'Top up gagal (simulasi). Saldo tidak berubah.');
         }
 
@@ -49,12 +51,24 @@ class WalletController extends Controller
                 'topup',
                 'Top up via ' . strtoupper(str_replace('va_', '', $data['method']))
             );
-
-            return redirect()->route('wallet.index')
-                ->with('status', 'topup-success')
-                ->with('topup_amount', $data['amount']);
         } catch (InvalidArgumentException $e) {
             return back()->withErrors(['amount' => $e->getMessage()])->withInput();
         }
+
+        // Kalau dari checkout, lanjutkan ke halaman bayar (auto-settle SeumpamaPay)
+        if (! empty($data['return_to'])) {
+            $checkout = \App\Models\Checkout::where('reference', $data['return_to'])
+                ->where('user_id', $request->user()->id)
+                ->first();
+
+            if ($checkout && $checkout->status === \App\Enums\CheckoutStatus::PendingPayment) {
+                return redirect()->route('checkout.pay', $checkout->reference)
+                    ->with('status', 'topup-success');
+            }
+        }
+
+        return redirect()->route('wallet.index')
+            ->with('status', 'topup-success')
+            ->with('topup_amount', $data['amount']);
     }
 }

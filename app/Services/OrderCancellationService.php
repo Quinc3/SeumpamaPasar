@@ -14,7 +14,7 @@ class OrderCancellationService
      */
     public function cancel(Order $order): string
     {
-        return DB::transaction(function () use ($order) {
+        $result = DB::transaction(function () use ($order) {
             $productIds = $order->items()
                 ->whereNotNull('product_id')
                 ->orderBy('product_id')
@@ -26,21 +26,11 @@ class OrderCancellationService
 
             $locked = Order::query()->where('id', $order->id)->lockForUpdate()->firstOrFail();
 
-            if ($locked->status === OrderStatus::Cancelled) {
-                return 'already_cancelled';
-            }
-            if (! in_array($locked->status, [OrderStatus::PendingProcessing, OrderStatus::Processing], true)) {
-                return 'invalid_status';
-            }
-            if ($locked->stock_deducted_at === null) {
-                return 'invalid_integrity';
-            }
-            if ($locked->refunded_at !== null) {
-                return 'already_refunded';
-            }
-            if ($locked->stock_restored_at !== null) {
-                return 'already_restored';
-            }
+            if ($locked->status === OrderStatus::Cancelled) return 'already_cancelled';
+            if (! in_array($locked->status, [OrderStatus::PendingProcessing, OrderStatus::Processing], true)) return 'invalid_status';
+            if ($locked->stock_deducted_at === null) return 'invalid_integrity';
+            if ($locked->refunded_at !== null) return 'already_refunded';
+            if ($locked->stock_restored_at !== null) return 'already_restored';
 
             foreach ($locked->items as $item) {
                 if ($item->product_id !== null) {
@@ -57,5 +47,28 @@ class OrderCancellationService
 
             return 'cancelled';
         });
+
+        // Credit refund ke SeumpamaPay (di luar transaksi cancel)
+        if ($result === 'cancelled') {
+            try {
+                $order->refresh();
+                if ($order->buyer && (float) $order->refunded_amount > 0) {
+                    app(\App\Services\WalletService::class)->credit(
+                        $order->buyer,
+                        (float) $order->refunded_amount,
+                        'refund',
+                        'Refund pesanan #' . $order->id . ' (' . $order->checkout->reference . ')',
+                        $order
+                    );
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Gagal credit wallet refund', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $result;
     }
 }

@@ -9,6 +9,17 @@
             <a href="{{ route('wallet.index') }}" class="text-sm text-surface-600 hover:text-surface-900">← SeumpamaPay</a>
         </div>
 
+        @if (session('error'))
+            <x-alert variant="danger">{{ session('error') }}</x-alert>
+        @endif
+
+        @if (! empty($returnTo))
+            <x-alert variant="info">
+                Anda melakukan top up untuk menyelesaikan <strong>Checkout {{ $returnTo }}</strong>.
+                Setelah top up berhasil, Anda akan diarahkan ke halaman pembayaran.
+            </x-alert>
+        @endif
+
         <x-card>
             <p class="text-sm text-surface-600">Saldo saat ini</p>
             <p class="text-2xl font-bold text-surface-900">Rp {{ number_format((float) $wallet->balance, 0, ',', '.') }}</p>
@@ -21,6 +32,9 @@
         <form method="POST" action="{{ route('wallet.topup.submit') }}"
               x-data="{ amount: 50000, customMode: false, customAmount: '' }">
             @csrf
+            @if (! empty($returnTo))
+                <input type="hidden" name="return_to" value="{{ $returnTo }}">
+            @endif
 
             {{-- Pilih nominal --}}
             <x-card>
@@ -53,7 +67,6 @@
                     <p class="text-xs text-surface-500 mt-1">Minimal Rp 10.000, maksimal Rp 10.000.000</p>
                 </div>
 
-                {{-- Hidden field yang dikirim ke server --}}
                 <input type="hidden" name="amount" x-bind:value="amount">
 
                 <div class="mt-3 p-3 bg-surface-50 border border-surface-200 rounded-md flex items-center justify-between">
