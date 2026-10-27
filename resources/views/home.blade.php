@@ -3,30 +3,8 @@
 @section('title', 'Beranda')
 
 @section('content')
-    {{-- Hero banner --}}
-    <section class="bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-            <div class="max-w-2xl">
-                <p class="text-xs uppercase tracking-widest text-primary-100 mb-2">Integrated E-Commerce</p>
-                <h1 class="text-3xl sm:text-4xl font-bold leading-tight">
-                    Belanja retail & grosir<br class="hidden sm:block"> dalam satu platform.
-                </h1>
-                <p class="mt-3 text-sm sm:text-base text-primary-50 max-w-xl">
-                    Harga retail untuk semua pembeli, harga grosir untuk bisnis terverifikasi. Plus diskon member 5% & komisi afiliasi.
-                </p>
-                <div class="mt-5 flex flex-wrap gap-2">
-                    <a href="{{ route('catalog.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary-700 rounded-md font-semibold text-sm hover:bg-surface-100">
-                        <x-icon name="shopping-cart" size="sm" /> Jelajahi Katalog
-                    </a>
-                    @guest
-                        <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-white/40 text-white rounded-md font-semibold text-sm hover:bg-white/10">
-                            <x-icon name="user" size="sm" /> Daftar Gratis
-                        </a>
-                    @endguest
-                </div>
-            </div>
-        </div>
-    </section>
+{{-- Hero carousel --}}
+<x-hero-carousel />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
         {{-- Kategori --}}
