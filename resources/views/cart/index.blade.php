@@ -66,9 +66,12 @@
                         <p class="text-sm text-surface-600">Subtotal</p>
                         <x-price :amount="$subtotal" class="text-xl" />
                     </div>
-                    <a href="#">
-                        <x-primary-button type="button" disabled>Checkout (Fase 3.2)</x-primary-button>
-                    </a>
+                    <a href="{{ route('checkout.index') }}">
+    <x-primary-button type="button">
+        <x-icon name="credit-card" size="sm" class="mr-1.5" />
+        Checkout
+    </x-primary-button>
+</a>
                 </div>
             </x-card>
         @endif

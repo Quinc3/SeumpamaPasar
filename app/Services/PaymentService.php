@@ -1,0 +1,142 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\CheckoutStatus;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Models\Checkout;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
+
+class PaymentService
+{
+    /**
+     * @return string 'success' | 'failed' | 'already_processed'
+     */
+    public function settle(Checkout $checkout, bool $simulateSuccess): string
+    {
+        DB::beginTransaction();
+        try {
+            $payment = Payment::query()->where('checkout_id', $checkout->id)->lockForUpdate()->first();
+            if (! $payment || $payment->status !== PaymentStatus::Pending) {
+                DB::rollBack();
+                return 'already_processed';
+            }
+
+            if (! $simulateSuccess) {
+                DB::rollBack();
+                $this->recordFailure($checkout->id, 'buyer_selected_failure');
+                return 'failed';
+            }
+
+            $items = OrderItem::query()
+                ->whereHas('order', fn ($q) => $q->where('checkout_id', $checkout->id))
+                ->orderBy('product_id')
+                ->get();
+
+            $productIds = $items->pluck('product_id')->unique()->sort()->values();
+            $products = Product::query()->whereIn('id', $productIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+
+            $orders = Order::query()->where('checkout_id', $checkout->id)->orderBy('id')->lockForUpdate()->get();
+
+            $buyer = $checkout->user;
+            $isMember = $buyer->isMember();
+
+            foreach ($orders as $order) {
+                if ($order->status !== OrderStatus::PendingPayment) {
+                    throw new RuntimeException('order_status_changed');
+                }
+            }
+
+            foreach ($items as $item) {
+                $product = $products[$item->product_id] ?? null;
+                if (! $product) {
+                    throw new RuntimeException('product_inactive');
+                }
+                if ($product->status !== 'active') {
+                    throw new RuntimeException('product_inactive');
+                }
+                if ($product->sellerProfile->status !== 'active') {
+                    throw new RuntimeException('seller_inactive');
+                }
+                if ($product->stock < $item->quantity) {
+                    throw new RuntimeException('insufficient_stock');
+                }
+
+                $expected = (float) $product->price;
+                if ($isMember) {
+                    $expected = round($expected * 0.95, 2);
+                }
+                if (abs($expected - (float) $item->unit_price) > 0.01) {
+                    throw new RuntimeException('price_changed');
+                }
+            }
+
+            foreach ($items as $item) {
+                $products[$item->product_id]->decrement('stock', $item->quantity);
+            }
+
+            foreach ($orders as $order) {
+                $order->update([
+                    'status' => OrderStatus::PendingProcessing,
+                    'stock_deducted_at' => now(),
+                ]);
+            }
+
+            $payment->update(['status' => PaymentStatus::Paid, 'paid_at' => now()]);
+            $checkout->update(['status' => CheckoutStatus::Paid]);
+
+            DB::commit();
+            return 'success';
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $this->recordFailure($checkout->id, $this->mapReason($e));
+            return 'failed';
+        }
+    }
+
+    private function recordFailure(int $checkoutId, string $reason): void
+    {
+        DB::transaction(function () use ($checkoutId, $reason) {
+            $payment = Payment::query()->where('checkout_id', $checkoutId)->lockForUpdate()->first();
+            if (! $payment || $payment->status !== PaymentStatus::Pending) {
+                return;
+            }
+
+            $affected = Payment::query()
+                ->where('id', $payment->id)
+                ->where('status', PaymentStatus::Pending)
+                ->update([
+                    'status' => PaymentStatus::Failed,
+                    'failure_reason' => $reason,
+                    'failed_at' => now(),
+                ]);
+
+            if ($affected !== 1) {
+                return;
+            }
+
+            Order::query()
+                ->where('checkout_id', $checkoutId)
+                ->where('status', OrderStatus::PendingPayment)
+                ->orderBy('id')
+                ->update(['status' => OrderStatus::Cancelled]);
+
+            Checkout::query()
+                ->where('id', $checkoutId)
+                ->where('status', CheckoutStatus::PendingPayment)
+                ->update(['status' => CheckoutStatus::Cancelled]);
+        });
+    }
+
+    private function mapReason(\Throwable $e): string
+    {
+        $known = ['insufficient_stock', 'price_changed', 'product_inactive', 'seller_inactive', 'order_status_changed'];
+        return in_array($e->getMessage(), $known, true) ? $e->getMessage() : 'checkout_validation_failed';
+    }
+}

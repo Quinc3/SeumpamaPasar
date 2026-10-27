@@ -67,9 +67,23 @@
         </div>
 
         <x-card>
-            <p class="text-sm text-surface-600">
-                Katalog, keranjang, dan riwayat pesanan akan tersedia pada Fase 3.
-            </p>
-        </x-card>
+    <a href="{{ route('addresses.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700">
+        <span class="flex items-center gap-2"><x-icon name="home" size="sm" /> Alamat Pengiriman</span>
+        <span class="text-surface-400">›</span>
+    </a>
+</x-card>
+
+<x-card>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <a href="{{ route('catalog.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
+            <span class="flex items-center gap-2"><x-icon name="tag" size="sm" /> Jelajahi Katalog</span>
+            <span class="text-surface-400">›</span>
+        </a>
+        <a href="{{ route('cart.index') }}" class="flex items-center justify-between text-sm font-medium text-surface-900 hover:text-primary-700 px-2 py-2 rounded-md hover:bg-surface-50">
+            <span class="flex items-center gap-2"><x-icon name="shopping-cart" size="sm" /> Keranjang Saya</span>
+            <span class="text-surface-400">›</span>
+        </a>
+    </div>
+</x-card>
     </div>
 @endsection
