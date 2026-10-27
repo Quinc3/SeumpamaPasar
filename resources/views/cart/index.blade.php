@@ -57,9 +57,10 @@
                                 @php $item = $li['cart_item']; $p = $item->product; @endphp
                                 <div class="p-3 sm:p-4 flex items-start gap-3">
                                     <div class="pt-1">
-                                        <input type="checkbox"
+                                    <input type="checkbox"
                                                value="{{ $item->id }}"
                                                data-seller="{{ $sellerId }}"
+                                               data-line-total="{{ $li['line_total'] }}"
                                                x-on:change="syncItem($event.target)"
                                                class="cart-item-checkbox rounded border-surface-300 text-primary-600 focus:ring-primary-500">
                                     </div>
@@ -114,7 +115,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <p class="text-sm text-surface-600">Total</p>
-                            <x-price :amount="$subtotal" class="text-xl" />
+                            <span class="text-xl font-semibold text-surface-900" x-text="formatRp(totalDisplay)">Rp 0</span>
                         </div>
                         <button type="button" x-on:click="goCheckout()" x-bind:disabled="selected.length === 0"
                                 class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-primary-700 text-white text-sm font-semibold rounded-md hover:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -128,10 +129,22 @@
     </x-page-wrapper>
 
     @if ($items->isNotEmpty())
-        <script>
+    <script>
             function cartForm() {
                 return {
                     selected: [],
+
+                    get totalDisplay() {
+                        return this.selected.reduce((sum, id) => {
+                            const cb = document.querySelector(`.cart-item-checkbox[value="${id}"]`);
+                            const lineTotal = cb ? parseFloat(cb.dataset.lineTotal) : 0;
+                            return sum + (isNaN(lineTotal) ? 0 : lineTotal);
+                        }, 0);
+                    },
+
+                    formatRp(n) {
+                        return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+                    },
 
                     syncItem(cb) {
                         const id = parseInt(cb.value);
