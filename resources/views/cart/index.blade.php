@@ -38,30 +38,18 @@
                             <div class="flex-1 min-w-0">
                                 <a href="{{ route('catalog.show', $p->slug) }}" class="text-sm font-medium text-surface-900 hover:text-primary-700 line-clamp-2">{{ $p->name }}</a>
                                 <p class="text-xs text-surface-500 mt-0.5">{{ $p->sellerProfile->store_name }}</p>
-
-                                <div class="mt-1.5 flex flex-col gap-0.5">
-                                    {{-- Harga satuan --}}
-                                    <div class="flex items-center gap-2 flex-wrap text-xs text-surface-600">
-                                        @if ($li['applies_tier'])
-                                            <span class="text-primary-700 font-medium">
-                                                Grosir Rp {{ number_format($li['unit_price'] / ($isMember ? 0.95 : 1), 0, ',', '.') }}/pcs
-                                            </span>
-                                            @if ($isMember)
-                                                <span>· Member 5% → <span class="font-medium text-surface-900">Rp {{ number_format($li['unit_price'], 0, ',', '.') }}/pcs</span></span>
-                                            @endif
-                                        @else
-                                            <span>Rp {{ number_format($li['unit_price'], 0, ',', '.') }}/pcs</span>
-                                            @if ($isMember)
-                                                <span class="text-green-700">(Member 5%)</span>
-                                            @endif
-                                        @endif
-                                    </div>
-
-                                    {{-- Subtotal per baris --}}
-                                    <div class="text-sm font-semibold text-surface-900 mt-0.5">
-                                        <x-price :amount="$li['line_total']" class="text-sm" />
-                                    </div>
+                                <div class="mt-1 flex items-center gap-2 flex-wrap text-sm">
+                                    <x-price :amount="$li['line_total']" class="font-semibold" />
+                                    @if ($li['applies_tier'])
+                                        <x-badge variant="primary">Grosir</x-badge>
+                                    @endif
+                                    @if ($isMember)
+                                        <x-badge variant="success">Member</x-badge>
+                                    @endif
                                 </div>
+                                <p class="text-xs text-surface-500 mt-0.5">
+                                    Rp {{ number_format($li['unit_price'], 0, ',', '.') }} × {{ $item->quantity }}
+                                </p>
                             </div>
                             <div class="flex flex-col items-end justify-between gap-2">
                                 <form method="POST" action="{{ route('cart.update', $item->id) }}" class="flex items-center gap-1">
