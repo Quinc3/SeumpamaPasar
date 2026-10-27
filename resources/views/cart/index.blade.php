@@ -21,8 +21,9 @@
                 </x-empty-state>
             </x-card>
         @else
-            <form method="GET" action="{{ route('checkout.index') }}" x-data="cartForm()">
-                {{-- Bulk toolbar (tanpa tombol checkout) --}}
+            <div x-data="cartForm()" class="space-y-4">
+
+                {{-- Bulk toolbar --}}
                 <div class="flex flex-wrap items-center justify-between gap-2 bg-white border border-surface-200 rounded-lg p-3">
                     <label class="inline-flex items-center gap-2 text-sm text-surface-700 cursor-pointer">
                         <input type="checkbox" x-on:change="toggleAll($event.target.checked)"
@@ -32,18 +33,17 @@
                     <span class="text-sm text-surface-600"><span x-text="selected.length"></span> produk dipilih</span>
                 </div>
 
-                {{-- Error --}}
                 @error('checkout') <x-alert variant="danger">{{ $message }}</x-alert> @enderror
                 @error('cart') <x-alert variant="danger">{{ $message }}</x-alert> @enderror
 
                 {{-- Grup per seller --}}
                 @foreach ($groups as $sellerId => $group)
                     <div class="bg-white border border-surface-200 rounded-lg overflow-hidden">
+                        {{-- Header toko --}}
                         <div class="flex items-center justify-between gap-2 px-4 py-3 bg-surface-50 border-b border-surface-200">
                             <label class="inline-flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox"
                                        x-on:change="toggleSeller({{ $sellerId }}, $event.target.checked)"
-                                       x-ref="seller{{ $sellerId }}"
                                        class="rounded border-surface-300 text-primary-600 focus:ring-primary-500">
                                 <x-icon name="home" size="sm" class="text-surface-600" />
                                 <span class="text-sm font-semibold text-surface-900">{{ $group['seller']->store_name }}</span>
@@ -51,16 +51,16 @@
                             <span class="text-xs text-surface-500">{{ $group['items']->count() }} produk</span>
                         </div>
 
+                        {{-- Item per toko --}}
                         <div class="divide-y divide-surface-100">
                             @foreach ($group['items'] as $li)
                                 @php $item = $li['cart_item']; $p = $item->product; @endphp
                                 <div class="p-3 sm:p-4 flex items-start gap-3">
                                     <div class="pt-1">
                                         <input type="checkbox"
-                                               name="cart_item_ids[]"
                                                value="{{ $item->id }}"
                                                data-seller="{{ $sellerId }}"
-                                               x-on:change="syncItem($event.target, {{ $sellerId }})"
+                                               x-on:change="syncItem($event.target)"
                                                class="cart-item-checkbox rounded border-surface-300 text-primary-600 focus:ring-primary-500">
                                     </div>
                                     <a href="{{ route('catalog.show', $p->slug) }}" class="shrink-0 w-20 h-20 bg-surface-100 rounded-md overflow-hidden">
@@ -83,6 +83,7 @@
                                         <p class="text-xs text-surface-500 mt-0.5">Rp {{ number_format($li['unit_price'], 0, ',', '.') }} × {{ $item->quantity }}</p>
                                     </div>
                                     <div class="flex flex-col items-end justify-between gap-2 shrink-0">
+                                        {{-- Update form (standalone, tidak nested) --}}
                                         <form method="POST" action="{{ route('cart.update', $item->id) }}" class="flex items-center gap-1">
                                             @csrf @method('PATCH')
                                             <input type="number" name="quantity" value="{{ $item->quantity }}" min="{{ max(1, $li['min_qty']) }}" max="{{ $p->stock }}"
@@ -91,6 +92,7 @@
                                                 <x-icon name="arrow-path" size="sm" />
                                             </button>
                                         </form>
+                                        {{-- Remove form (standalone, tidak nested) --}}
                                         <form method="POST" action="{{ route('cart.remove', $item->id) }}">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="text-xs text-red-600 hover:text-red-700">Hapus</button>
@@ -107,21 +109,21 @@
                     </div>
                 @endforeach
 
-                {{-- Total + Checkout (satu tombol) --}}
+                {{-- Total + Checkout (tanpa form, button via JS) --}}
                 <x-card>
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <p class="text-sm text-surface-600">Total</p>
                             <x-price :amount="$subtotal" class="text-xl" />
                         </div>
-                        <button type="submit" x-bind:disabled="selected.length === 0"
+                        <button type="button" x-on:click="goCheckout()" x-bind:disabled="selected.length === 0"
                                 class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-primary-700 text-white text-sm font-semibold rounded-md hover:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed">
                             <x-icon name="credit-card" size="sm" />
                             Checkout (<span x-text="selected.length"></span>)
                         </button>
                     </div>
                 </x-card>
-            </form>
+            </div>
         @endif
     </x-page-wrapper>
 
@@ -131,19 +133,11 @@
                 return {
                     selected: [],
 
-                    syncItem(cb, sellerId) {
+                    syncItem(cb) {
                         const id = parseInt(cb.value);
                         const idx = this.selected.indexOf(id);
                         if (cb.checked && idx === -1) this.selected.push(id);
                         if (!cb.checked && idx !== -1) this.selected.splice(idx, 1);
-                        this.updateSellerCheckbox(sellerId);
-                    },
-
-                    updateSellerCheckbox(sellerId) {
-                        const all = document.querySelectorAll(`.cart-item-checkbox[data-seller="${sellerId}"]`);
-                        const checked = document.querySelectorAll(`.cart-item-checkbox[data-seller="${sellerId}"]:checked`);
-                        const sellerBox = document.querySelector(`.seller-checkbox[data-seller="${sellerId}"]`);
-                        if (sellerBox) sellerBox.checked = all.length > 0 && all.length === checked.length;
                     },
 
                     toggleSeller(sellerId, checked) {
@@ -157,15 +151,18 @@
                     },
 
                     toggleAll(checked) {
-                        document.querySelectorAll('.cart-item-checkbox').forEach(cb => {
-                            cb.checked = checked;
-                        });
-                        document.querySelectorAll('.seller-checkbox').forEach(cb => {
-                            cb.checked = checked;
-                        });
-                        this.selected = checked
-                            ? Array.from(document.querySelectorAll('.cart-item-checkbox')).map(cb => parseInt(cb.value))
-                            : [];
+                        document.querySelectorAll('.cart-item-checkbox').forEach(cb => { cb.checked = checked; });
+                        if (checked) {
+                            this.selected = Array.from(document.querySelectorAll('.cart-item-checkbox')).map(cb => parseInt(cb.value));
+                        } else {
+                            this.selected = [];
+                        }
+                    },
+
+                    goCheckout() {
+                        if (this.selected.length === 0) return;
+                        const params = this.selected.map(id => 'cart_item_ids[]=' + id).join('&');
+                        window.location.href = '{{ route('checkout.index') }}?' + params;
                     }
                 };
             }
