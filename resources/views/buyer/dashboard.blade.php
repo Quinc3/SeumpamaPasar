@@ -56,10 +56,17 @@
         @endunless
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <x-card>
+        <a href="{{ route('buyer.orders.index') }}" class="block">
+    <x-card class="hover:shadow-card-hover transition">
+        <div class="flex items-center justify-between">
+            <div>
                 <div class="text-sm text-surface-600">Pesanan</div>
                 <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $orderCount }}</div>
-            </x-card>
+            </div>
+            <x-icon name="chevron-right" size="md" class="text-surface-400" />
+        </div>
+    </x-card>
+</a>
             <x-card>
                 <div class="text-sm text-surface-600">Alamat</div>
                 <div class="text-2xl font-semibold text-surface-900 mt-1">{{ $addressCount }}</div>

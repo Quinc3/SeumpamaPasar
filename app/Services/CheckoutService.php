@@ -32,7 +32,9 @@ class CheckoutService
 
             foreach ($items as $item) {
                 $p = $item->product;
-                if (! $p || $p->status !== 'active' || $p->sellerProfile->status !== 'active') {
+                if (! $p
+    || $p->status !== \App\Enums\ProductStatus::Active
+    || $p->sellerProfile->status !== \App\Enums\SellerStatus::Active) {
                     throw new RuntimeException("Produk '{$item->product->name}' tidak lagi tersedia.");
                 }
                 if ($p->stock < $item->quantity) {

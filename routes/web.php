@@ -59,6 +59,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/{checkout:reference}/bayar', [CheckoutController::class, 'showPay'])->name('checkout.pay');
     Route::post('/checkout/{checkout:reference}/bayar', [CheckoutController::class, 'pay'])->name('checkout.pay.submit');
     Route::get('/checkout/{checkout:reference}/hasil', [CheckoutController::class, 'result'])->name('checkout.result');
+
+        // Buyer Orders
+        Route::get('/akun/pesanan', [\App\Http\Controllers\Buyer\OrderController::class, 'index'])->name('buyer.orders.index');
+        Route::get('/akun/pesanan/{order}', [\App\Http\Controllers\Buyer\OrderController::class, 'show'])->name('buyer.orders.show');
+        Route::post('/akun/pesanan/{order}/selesai', [\App\Http\Controllers\Buyer\OrderController::class, 'complete'])->name('buyer.orders.complete');
 });
 
 require __DIR__.'/auth.php';

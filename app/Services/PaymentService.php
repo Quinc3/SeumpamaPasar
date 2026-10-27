@@ -58,10 +58,10 @@ class PaymentService
                 if (! $product) {
                     throw new RuntimeException('product_inactive');
                 }
-                if ($product->status !== 'active') {
+                if ($product->status !== \App\Enums\ProductStatus::Active) {
                     throw new RuntimeException('product_inactive');
                 }
-                if ($product->sellerProfile->status !== 'active') {
+                if ($product->sellerProfile->status !== \App\Enums\SellerStatus::Active) {
                     throw new RuntimeException('seller_inactive');
                 }
                 if ($product->stock < $item->quantity) {
@@ -82,14 +82,20 @@ class PaymentService
             }
 
             foreach ($orders as $order) {
-                $order->update([
+                $order->forceFill([
                     'status' => OrderStatus::PendingProcessing,
                     'stock_deducted_at' => now(),
-                ]);
+                ])->save();
             }
 
-            $payment->update(['status' => PaymentStatus::Paid, 'paid_at' => now()]);
-            $checkout->update(['status' => CheckoutStatus::Paid]);
+            $payment->forceFill([
+                'status' => PaymentStatus::Paid,
+                'paid_at' => now(),
+            ])->save();
+
+            $checkout->forceFill([
+                'status' => CheckoutStatus::Paid,
+            ])->save();
 
             DB::commit();
             return 'success';
@@ -110,9 +116,9 @@ class PaymentService
 
             $affected = Payment::query()
                 ->where('id', $payment->id)
-                ->where('status', PaymentStatus::Pending)
+                ->where('status', PaymentStatus::Pending->value)
                 ->update([
-                    'status' => PaymentStatus::Failed,
+                    'status' => PaymentStatus::Failed->value,
                     'failure_reason' => $reason,
                     'failed_at' => now(),
                 ]);
@@ -123,14 +129,13 @@ class PaymentService
 
             Order::query()
                 ->where('checkout_id', $checkoutId)
-                ->where('status', OrderStatus::PendingPayment)
-                ->orderBy('id')
-                ->update(['status' => OrderStatus::Cancelled]);
+                ->where('status', OrderStatus::PendingPayment->value)
+                ->update(['status' => OrderStatus::Cancelled->value]);
 
             Checkout::query()
                 ->where('id', $checkoutId)
-                ->where('status', CheckoutStatus::PendingPayment)
-                ->update(['status' => CheckoutStatus::Cancelled]);
+                ->where('status', CheckoutStatus::PendingPayment->value)
+                ->update(['status' => CheckoutStatus::Cancelled->value]);
         });
     }
 

@@ -12,7 +12,8 @@ class CartService
 {
     public function add(User $user, Product $product, int $qty): CartItem
     {
-        if ($product->status !== 'active' || $product->sellerProfile->status !== 'active') {
+        if ($product->status !== \App\Enums\ProductStatus::Active
+    || $product->sellerProfile->status !== \App\Enums\SellerStatus::Active) {
             throw new InvalidArgumentException('Produk tidak tersedia.');
         }
 

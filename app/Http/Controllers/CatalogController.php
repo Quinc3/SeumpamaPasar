@@ -41,17 +41,17 @@ class CatalogController extends Controller
     public function show(Product $product): View
     {
         abort_unless(
-            $product->status === 'active'
-            && $product->sellerProfile->status === 'active'
-            && $product->sales_channel === 'b2c',
+            $product->status === \App\Enums\ProductStatus::Active
+            && $product->sellerProfile->status === \App\Enums\SellerStatus::Active
+            && $product->sales_channel === \App\Enums\SalesChannel::B2C,
             404
         );
 
         $product->load(['sellerProfile', 'images', 'category']);
 
         $related = Product::query()
-            ->where('status', 'active')
-            ->where('sales_channel', 'b2c')
+            ->where('status', \App\Enums\ProductStatus::Active)
+            ->where('sales_channel', \App\Enums\SalesChannel::B2C)
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->limit(4)
