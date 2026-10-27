@@ -23,7 +23,7 @@
 
         <x-sidebar-nav>
             <x-nav-item href="{{ route('seller.dashboard') }}" icon="home" :active="request()->routeIs('seller.dashboard')">Dashboard</x-nav-item>
-            <x-nav-item href="#" icon="tag">Produk</x-nav-item>
+            <x-nav-item href="{{ route('seller.products.index') }}" icon="tag" :active="request()->routeIs('seller.products.*')">Produk</x-nav-item>
             <x-nav-item href="{{ route('seller.orders.index') }}" icon="truck" :active="request()->routeIs('seller.orders.*')">Pesanan</x-nav-item>
             <x-nav-item href="#" icon="user-circle">Profil Toko</x-nav-item>
         </x-sidebar-nav>

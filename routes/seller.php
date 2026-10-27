@@ -14,4 +14,13 @@ Route::middleware(['auth', 'seller.active'])
         Route::post('/pesanan/{order}/proses', [OrderController::class, 'process'])->name('orders.process');
         Route::post('/pesanan/{order}/kirim', [OrderController::class, 'ship'])->name('orders.ship');
         Route::post('/pesanan/{order}/batal', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+        Route::get('/produk', [\App\Http\Controllers\Seller\ProductController::class, 'index'])->name('products.index');
+        Route::get('/produk/baru', [\App\Http\Controllers\Seller\ProductController::class, 'create'])->name('products.create');
+        Route::post('/produk', [\App\Http\Controllers\Seller\ProductController::class, 'store'])->name('products.store');
+        Route::get('/produk/{product}/edit', [\App\Http\Controllers\Seller\ProductController::class, 'edit'])->name('products.edit');
+        Route::patch('/produk/{product}', [\App\Http\Controllers\Seller\ProductController::class, 'update'])->name('products.update');
+        Route::post('/produk/{product}/arsip', [\App\Http\Controllers\Seller\ProductController::class, 'archive'])->name('products.archive');
+        Route::post('/produk/{product}/tier', [\App\Http\Controllers\Seller\WholesaleTierController::class, 'store'])->name('products.tiers.store');
+        Route::delete('/produk/{product}/tier/{tier}', [\App\Http\Controllers\Seller\WholesaleTierController::class, 'destroy'])->name('products.tiers.destroy');
     });
