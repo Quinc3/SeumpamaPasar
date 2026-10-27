@@ -104,6 +104,23 @@ Seller dapat membatalkan order `pending_processing` → stok kembali, refund dic
 - Komisi: 5% × subtotal order saat berstatus `completed`
 - Self-referral diblokir
 
+### Beranda (Homepage)
+- Hero banner dengan CTA
+- Grid kategori dengan jumlah produk
+- Produk Unggulan (featured)
+- Produk Terlaris (by sold_count)
+- Produk Terbaru
+- Product card dengan rating, jumlah terjual, badge diskon
+- **Catatan:** `discount_price` & `rating` adalah display kosmetik — harga transaksi tetap `products.price` (B2C) atau tier (B2B).
+
+### UI/UX
+- Header Shopee-style (search besar + cart badge)
+- Hub universal `/dashboard` — semua role masuk sini, kartu kapabilitas kondisional
+- Workspace sub-nav (toko/afiliasi) di dalam layout unified
+- Password toggle (icon mata) di semua form password
+- Copy button untuk kode & link afiliasi
+- Mobile-first: bottom nav buyer, drawer admin
+
 ### Admin
 - Dashboard analytics (pendapatan, order, komisi, penjual teratas)
 - Moderasi produk (approve/reject)
@@ -138,6 +155,7 @@ Spesifikasi proyek di `docs/`:
 - Tidak ada integrasi provider PPOB / digital
 - Semua transaksi uang = simulasi
 - Tabel `digital_*` di DB tidak dipakai (leftover Fase 1)
+- `discount_price` & `rating` produk = kosmetik; tidak memengaruhi harga transaksi.
 
 ## Lisensi
 
