@@ -1,138 +1,107 @@
 # Seumpama Pasar
 
-Aplikasi e-commerce akademik dengan **2 jenis perdagangan** (B2C, B2B) dan **3 model bisnis** (Member, Affiliate, Seller). Semua transaksi bersifat simulasi — tidak ada uang sungguhan, payment gateway, atau API eksternal.
+Aplikasi e-commerce akademik dengan B2C + B2B, model Member/Affiliate/Seller, wallet SeumpamaPay, dan escrow simulasi.
 
-## Stack
-
-- Laravel 12.70.1 · PHP 8.2.12
-- Blade + Tailwind CSS v3 + Vite 7 + Alpine.js
-- MariaDB 10.4 (atau MySQL 8.0+)
-- PHPUnit 11.5
-- Heroicons v2 (SVG lokal)
-
-## Persyaratan
-
-- PHP 8.2+, Composer 2.x, Node.js 18+, npm
-- MySQL 8.0+ / MariaDB 10.4+
-- Ekstensi PHP: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `fileinfo`, `bcmath`, `curl`, `gd`
+---
 
 ## Instalasi
 
 ```bash
-git clone <repo> e-commerce
-cd e-commerce
-
-# Backend
 composer install
 cp .env.example .env
 php artisan key:generate
-
-# Frontend
-npm install
-npm run build
-
-# Storage (untuk gambar produk)
+npm install && npm run build
 php artisan storage:link
 ```
 
 Edit `.env`:
 
-```
+```env
 DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
 DB_DATABASE=e_commerce
 DB_USERNAME=root
 DB_PASSWORD=
 APP_URL=http://localhost:8000
 ```
 
-Buat database di MySQL/MariaDB:
-
-```sql
-CREATE DATABASE e_commerce CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-Migrasi + seed:
+Buat database `e_commerce` di MySQL/MariaDB, lalu:
 
 ```bash
 php artisan migrate
 php artisan db:seed
-```
-
-## Menjalankan
-
-```bash
 php artisan serve
-# Buka http://127.0.0.1:8000
 ```
 
-## Akun Demo (dari seeder)
+Buka [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+---
+
+## Akun Demo
 
 | Email | Password | Peran |
 |---|---|---|
 | admin@example.test | password | Admin |
-| seller@example.test | password | Seller individu |
-| business@example.test | password | Seller bisnis (terverifikasi) |
-| buyer@example.test | password | Buyer personal |
+| seller@example.test | password | Seller individu (Toko Demo) |
+| business@example.test | password | Seller bisnis (Grosir Demo) |
+| buyer@example.test | password | Buyer (Member + Affiliate) |
 
-## Fitur
+---
 
-### Jenis Perdagangan
-- **B2C** — semua pembeli bisa beli produk B2C
-- **B2B** — hanya pembeli bisnis terverifikasi; harga tier grosir + minimum qty
+## Demo Scenario (10–15 menit)
 
-### Model Bisnis
-- **Member** — diskon 5% otomatis setelah aktivasi di `/akun/member`
-- **Affiliate** — komisi 5% simulasi dari order via referral link; aktivasi di `/akun/afiliasi`
-- **Seller** — kelola produk & pesanan via `/toko`
+### 1. Buyer belanja
+- Login `buyer@example.test` → katalog → tambah produk dari 2 toko berbeda
+- `/keranjang` → grouped per seller, centang sebagian, checkout
+- Pilih alamat + **SeumpamaPay** (kalau saldo cukup) / **VA BCA** (kalau tidak)
+- Bayar Berhasil → order masuk ke seller, dana ditahan **escrow**
 
-### Alur Belanja
-Katalog → Keranjang → Checkout → Pembayaran Simulasi → Order
+### 2. Seller proses
+- Login `seller@example.test` → `/toko/pesanan` → **Proses** → **Kirim**
+- Saldo tertahan terlihat di dashboard
 
-### Simulasi Pembayaran
-Pilih **Berhasil** atau **Gagal** di halaman pembayaran. Status order mengikuti:
-- Berhasil → `pending_processing` → seller proses → seller kirim → buyer terima → `completed`
-- Gagal → `cancelled`, stok tidak berubah
+### 3. Buyer konfirmasi → escrow cair
+- Login buyer → `/akun/pesanan` → **Konfirmasi Terima**
+- Saldo seller di SeumpamaPay bertambah
 
-### Refund Simulasi
-Seller dapat membatalkan order `pending_processing` → stok kembali, refund dicatat di `orders.refunded_amount` (tidak ada uang nyata berpindah).
+### 4. SeumpamaPay top up
+- Login buyer → klik **SeumpamaPay** di header → **Top Up** → Rp 100.000 → **Simulasi Berhasil**
+- Saldo bertambah, riwayat tercatat
 
-### Affiliate
-- Aktivasi: `/akun/afiliasi` → dapat kode referral 8 karakter
-- Share link: `<url>?ref=KODE`
-- Komisi: 5% × subtotal order saat berstatus `completed`
-- Self-referral diblokir
+### 5. B2B demo
+- Login `business@example.test` → katalog → produk **Kaos Polos Grosir** (tier harga)
+- Qty 24 → harga jadi **Rp 65.000/pcs** (bukan Rp 75.000)
 
-### Beranda (Homepage)
-- Hero banner dengan CTA
-- Grid kategori dengan jumlah produk
-- Produk Unggulan (featured)
-- Produk Terlaris (by sold_count)
-- Produk Terbaru
-- Product card dengan rating, jumlah terjual, badge diskon
-- **Catatan:** `discount_price` & `rating` adalah display kosmetik — harga transaksi tetap `products.price` (B2C) atau tier (B2B).
+### 6. B2B negative
+- Login buyer personal (bukan bisnis) → akses URL produk B2B → **404**
 
-### UI/UX
-- Header Shopee-style (search besar + cart badge)
-- Hub universal `/dashboard` — semua role masuk sini, kartu kapabilitas kondisional
-- Workspace sub-nav (toko/afiliasi) di dalam layout unified
-- Password toggle (icon mata) di semua form password
-- Copy button untuk kode & link afiliasi
-- Mobile-first: bottom nav buyer, drawer admin
+### 7. Member benefit
+- Login `buyer@example.test` (Member aktif) → checkout → diskon **5%** terlihat di produk B2C
+- *(Diskon tidak berlaku di produk B2B — tier sudah diskon)*
 
-### Admin
-- Dashboard analytics (pendapatan, order, komisi, penjual teratas)
-- Moderasi produk (approve/reject)
-- Verifikasi bisnis
-- Kelola afiliasi (suspend/activate)
-- Kelola kategori
+### 8. Affiliate
+- Login buyer → `/akun/afiliasi` → **Aktifkan** → dapat kode
+- Salin link: `<url>/katalog?ref=KODE`
+- Incognito → paste link → login user lain → beli → completed
+- Kembali ke `/afiliasi` → komisi **5%** muncul
 
-### Seller
-- Dashboard analytics (pendapatan, produk terlaris)
-- CRUD produk (draft → pending_review → active)
-- Tier harga grosir (khusus B2B/Both)
-- Kelola pesanan (proses, kirim, batalkan)
+### 9. Seller self-registration
+- Register user baru → `/profile` → **Buka Toko** → isi form → **pending**
+- Login admin → **Kelola Penjual** → **Setujui**
+- Login seller baru → **Produk** → **Produk Baru** → tunggu approve admin
+
+### 10. Admin panel
+- Login admin → dashboard analytics, moderasi, verifikasi bisnis, kelola penjual, afiliasi
+
+---
+
+## Batasan Simulasi
+
+- Tidak ada transaksi uang sungguhan
+- Tidak ada payment gateway / API eksternal
+- Semua hasil pembayaran, refund, top up, escrow = logika internal
+- Fitur layanan digital (listrik, pulsa, data) dihapus dari scope
+
+---
 
 ## Testing
 
@@ -140,23 +109,8 @@ Seller dapat membatalkan order `pending_processing` → stok kembali, refund dic
 vendor/bin/phpunit
 ```
 
-## Struktur Dokumen
-
-Spesifikasi proyek di `docs/`:
-
-- `PROJECT_SPEC.md` — spec bisnis (v2.0)
-- `IMPLEMENTATION_PLAN.md` — roadmap (v2.0)
-- `AI_RULES.md` — aturan kerja AI (v2.0)
-- `PROGRESS.md` — status proyek
-
-## Batasan Simulasi
-
-- Tidak ada payment gateway
-- Tidak ada integrasi provider PPOB / digital
-- Semua transaksi uang = simulasi
-- Tabel `digital_*` di DB tidak dipakai (leftover Fase 1)
-- `discount_price` & `rating` produk = kosmetik; tidak memengaruhi harga transaksi.
+---
 
 ## Lisensi
 
-Proyek akademik — MIT.
+Akademik — MIT.
