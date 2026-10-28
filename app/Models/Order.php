@@ -34,6 +34,9 @@ class Order extends Model
             'stock_restored_at' => 'datetime',
             'refunded_amount' => 'decimal:2',
             'refunded_at' => 'datetime',
+            'escrow_amount' => 'decimal:2',
+            'escrowed_at' => 'datetime',
+            'released_at' => 'datetime',
         ];
     }
 
@@ -55,5 +58,15 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function isEscrowHeld(): bool
+    {
+        return $this->escrowed_at !== null && $this->released_at === null;
+    }
+
+    public function scopeEscrowHeld($query)
+    {
+        return $query->whereNotNull('escrowed_at')->whereNull('released_at');
     }
 }

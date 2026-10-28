@@ -31,14 +31,39 @@ class OrderController extends Controller
         return view('buyer.orders.show', compact('order'));
     }
 
-    public function complete(Request $request, Order $order, OrderStatusService $service, \App\Services\CommissionService $commissionService): RedirectResponse
+    public function complete(Request $request, Order $order, OrderStatusService $service, \App\Services\CommissionService $commissionService, \App\Services\WalletService $walletService): RedirectResponse
     {
         abort_unless($order->buyer_id === $request->user()->id, 403);
 
         $ok = $service->transition($order, \App\Enums\OrderStatus::Completed->value);
 
         if ($ok) {
-            $commissionService->awardForOrder($order->fresh());
+            $order->refresh();
+
+            // Release escrow ke wallet seller
+            if ($order->isEscrowHeld() && (float) $order->escrow_amount > 0) {
+                $sellerUser = $order->sellerProfile->user;
+                if ($sellerUser) {
+                    try {
+                        $walletService->credit(
+                            $sellerUser,
+                            (float) $order->escrow_amount,
+                            'refund',
+                            'Pencairan pesanan #' . $order->id . ' (' . $order->checkout->reference . ')',
+                            $order
+                        );
+                    } catch (\Throwable $e) {
+                        \Log::warning('Gagal release escrow ke seller', [
+                            'order_id' => $order->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+                $order->forceFill(['released_at' => now()])->save();
+            }
+
+            // Award komisi affiliate (existing)
+            $commissionService->awardForOrder($order);
         }
 
         return back()->with($ok ? 'status' : 'error', $ok ? 'order-completed' : 'Transisi status tidak valid.');

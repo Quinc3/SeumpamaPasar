@@ -43,6 +43,7 @@ class OrderCancellationService
                 'stock_restored_at' => now(),
                 'refunded_amount' => $locked->subtotal,
                 'refunded_at' => now(),
+                'released_at' => now(), // escrow selesai (refund ke buyer)
             ])->save();
 
             return 'cancelled';

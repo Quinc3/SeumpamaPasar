@@ -49,6 +49,9 @@ class DashboardController extends Controller
             'thisMonthRevenue' => $thisMonthRevenue,
             'ordersByStatus' => $ordersByStatus,
             'topProducts' => $topProducts,
+            'escrowHeldTotal' => (float) $seller->orders()->escrowHeld()->sum('escrow_amount'),
+            'escrowHeldCount' => $seller->orders()->escrowHeld()->count(),
+            'walletBalance' => (float) ($request->user()->wallet?->balance ?? 0),
         ]);
     }
 }

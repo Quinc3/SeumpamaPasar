@@ -92,6 +92,8 @@ class PaymentService
                 $order->forceFill([
                     'status' => OrderStatus::PendingProcessing,
                     'stock_deducted_at' => now(),
+                    'escrow_amount' => $order->subtotal,
+                    'escrowed_at' => now(),
                 ])->save();
             }
 

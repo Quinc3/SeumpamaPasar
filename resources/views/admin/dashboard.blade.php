@@ -27,6 +27,23 @@
         </x-card>
     </div>
 
+    {{-- Escrow aktif --}}
+    <x-card class="border-amber-200 bg-amber-50">
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="rounded-full bg-amber-100 p-2">
+                    <x-icon name="banknotes" size="md" class="text-amber-700" />
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wide text-surface-500">Escrow Aktif (ditahan platform)</p>
+                    <p class="text-xl font-bold text-surface-900">Rp {{ number_format($escrowHeldTotal, 0, ',', '.') }}</p>
+                    <p class="text-xs text-surface-500 mt-0.5">{{ $escrowHeldCount }} pesanan menunggu penyelesaian</p>
+                </div>
+            </div>
+            <x-icon name="information-circle" size="md" class="text-amber-600" />
+        </div>
+    </x-card>
+
     {{-- Counts sekunder --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <x-card>

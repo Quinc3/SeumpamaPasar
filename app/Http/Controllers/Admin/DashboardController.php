@@ -78,6 +78,8 @@ class DashboardController extends Controller
             'topSellers' => $topSellers,
             'totalCommission' => $totalCommission,
             'recentOrders' => $recentOrders,
+            'escrowHeldTotal' => (float) Order::query()->escrowHeld()->sum('escrow_amount'),
+            'escrowHeldCount' => Order::query()->escrowHeld()->count(),
         ]);
     }
 }

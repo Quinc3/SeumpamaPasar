@@ -51,6 +51,21 @@
             <p class="text-sm text-surface-600">{{ $order->shipping_line1 }}, {{ $order->shipping_city }}, {{ $order->shipping_province }} {{ $order->shipping_postal_code }}</p>
         </x-card>
 
+        @if ($order->isEscrowHeld())
+            <x-alert variant="info">
+                <div class="flex items-start gap-2">
+                    <x-icon name="banknotes" size="sm" class="text-blue-600 flex-shrink-0 mt-0.5" />
+                    <span class="text-xs">
+                        Dana <strong>Rp {{ number_format($order->escrow_amount, 0, ',', '.') }}</strong> ditahan oleh Seumpama Pasar sampai Anda mengonfirmasi penerimaan. Setelah itu dana diteruskan ke penjual.
+                    </span>
+                </div>
+            </x-alert>
+        @elseif ($order->released_at && $order->status === \App\Enums\OrderStatus::Completed)
+            <x-alert variant="success">
+                <span class="text-xs">Dana telah diteruskan ke penjual. Terima kasih telah berbelanja.</span>
+            </x-alert>
+        @endif
+
         @if ($order->refunded_at)
             <x-card class="border-blue-200 bg-blue-50">
                 <div class="flex items-start gap-3">

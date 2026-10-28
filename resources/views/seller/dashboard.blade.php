@@ -17,7 +17,7 @@
             </x-badge>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <x-card>
                 <div class="text-xs text-surface-500 uppercase tracking-wide">Total Pendapatan</div>
                 <x-price :amount="$totalRevenue" class="text-xl mt-1 block" />
@@ -26,6 +26,19 @@
                 <div class="text-xs text-surface-500 uppercase tracking-wide">Pendapatan Bulan Ini</div>
                 <x-price :amount="$thisMonthRevenue" class="text-xl mt-1 block" />
             </x-card>
+
+            <x-card class="border-amber-200 bg-amber-50">
+                <div class="text-xs text-surface-500 uppercase tracking-wide">Saldo Tertahan</div>
+                <x-price :amount="$escrowHeldTotal ?? 0" class="text-xl mt-1 block text-amber-700" />
+                <p class="text-xs text-surface-500 mt-0.5">{{ $escrowHeldCount ?? 0 }} pesanan</p>
+            </x-card>
+
+            <x-card class="border-green-200 bg-green-50">
+                <div class="text-xs text-surface-500 uppercase tracking-wide">Saldo Tersedia</div>
+                <x-price :amount="$walletBalance ?? 0" class="text-xl mt-1 block text-green-700" />
+                <p class="text-xs text-surface-500 mt-0.5">SeumpamaPay</p>
+            </x-card>
+
             <a href="{{ route('seller.products.index') }}" class="block">
                 <x-card class="hover:shadow-card-hover transition">
                     <div class="flex items-center justify-between">
