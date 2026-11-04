@@ -4,7 +4,9 @@
 
 @section('content')
 {{-- Hero carousel --}}
-<x-hero-carousel />
+<div data-tour-banner>
+        <x-hero-carousel />
+    </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
         {{-- Kategori --}}
@@ -50,9 +52,9 @@
                     <a href="{{ route('catalog.index', ['sort' => 'terlaris']) }}" class="text-xs text-primary-700 hover:underline">Lihat semua →</a>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                    @foreach ($bestsellers as $product)
-                        <x-product-card :product="$product" />
-                    @endforeach
+                @foreach ($bestsellers as $product)
+                    <x-product-card :product="$product" :is-tour-target="$loop->first" />
+                @endforeach
                 </div>
             </section>
         @endif
@@ -72,4 +74,5 @@
             </section>
         @endif
     </div>
+    <x-tour role="buyer" />
 @endsection

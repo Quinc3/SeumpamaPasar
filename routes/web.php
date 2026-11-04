@@ -15,6 +15,9 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('h
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/produk/{product:slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
+Route::get('/demo', [\App\Http\Controllers\DemoController::class, 'index'])->name('demo.index');
+Route::post('/demo/login/{email}', [\App\Http\Controllers\DemoController::class, 'loginAs'])->name('demo.login');
+
 Route::get('/dashboard', [\App\Http\Controllers\HubController::class, 'index'])
     ->middleware(['auth'])->name('dashboard');
 

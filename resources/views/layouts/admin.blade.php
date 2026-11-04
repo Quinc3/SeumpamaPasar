@@ -11,7 +11,7 @@
 <body class="min-h-screen bg-surface-50 font-sans antialiased text-surface-900" x-data="{ sidebar: false }">
     <div x-show="sidebar" x-on:click="sidebar = false" x-transition.opacity class="fixed inset-0 bg-black/40 z-40 md:hidden" style="display: none;" aria-hidden="true"></div>
 
-    <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-surface-200 flex flex-col transform transition-transform duration-200 -translate-x-full md:translate-x-0" :class="sidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
+    <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-surface-200 flex flex-col transform transition-transform duration-200 -translate-x-full md:translate-x-0" :class="sidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" data-tour-admin-sidebar>
         <div class="h-16 flex items-center justify-between px-4 border-b border-surface-200">
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2">
     <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary-700 text-white font-bold text-xs">SP</span>

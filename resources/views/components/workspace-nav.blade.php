@@ -15,7 +15,7 @@
     $label = $workspace === 'toko' ? 'Toko Saya' : 'Afiliasi';
 @endphp
 
-<div class="bg-white border-b border-surface-200">
+<div data-tour-seller-nav class="bg-white border-b border-surface-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-1 overflow-x-auto">
             <span class="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-surface-500 pr-3 border-r border-surface-200 mr-2 py-3 shrink-0">

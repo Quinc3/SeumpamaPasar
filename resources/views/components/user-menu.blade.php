@@ -1,6 +1,6 @@
 @auth
 @php $user = auth()->user(); @endphp
-<div x-data="{ open: false }" class="relative">
+<div x-data="{ open: false }" data-tour-user-menu class="relative">
     <button type="button" x-on:click="open = !open" x-on:click.outside="open = false" class="flex items-center gap-1.5 p-1 rounded-md hover:bg-white/10" aria-label="Menu pengguna">
         <x-avatar :name="$user->name" size="sm" class="ring-2 ring-white/30" />
         <x-icon name="chevron-down" size="sm" class="hidden sm:block" />
@@ -44,6 +44,18 @@
         </div>
 
         <div class="border-t border-surface-200 py-1">
+            @php
+                $currentRole = $user->role === \App\Enums\UserRole::Admin
+                    ? 'admin'
+                    : (($user->sellerProfile && $user->sellerProfile->status === \App\Enums\SellerStatus::Active) ? 'seller' : 'buyer');
+                $targetRoute = $currentRole === 'admin' ? route('admin.dashboard')
+                    : ($currentRole === 'seller' ? route('seller.dashboard') : route('home'));
+            @endphp
+            <button type="button"
+                    x-on:click="localStorage.removeItem('tour_{{ $currentRole }}_done'); window.location.href = '{{ $targetRoute }}';"
+                    class="w-full text-left flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">
+                <x-icon name="information-circle" size="sm" class="text-surface-500" /> Panduan
+            </button>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="w-full text-left flex items-center gap-2.5 px-4 py-2 text-sm text-surface-700 hover:bg-surface-50">

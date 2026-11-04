@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'not.admin' => \App\Http\Middleware\EnsureNotAdmin::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'demo/login/*',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\CaptureReferral::class,
         ]);

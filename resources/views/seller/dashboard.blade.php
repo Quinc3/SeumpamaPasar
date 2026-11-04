@@ -27,17 +27,21 @@
                 <x-price :amount="$thisMonthRevenue" class="text-xl mt-1 block" />
             </x-card>
 
-            <x-card class="border-amber-200 bg-amber-50">
-                <div class="text-xs text-surface-500 uppercase tracking-wide">Saldo Tertahan</div>
-                <x-price :amount="$escrowHeldTotal ?? 0" class="text-xl mt-1 block text-amber-700" />
-                <p class="text-xs text-surface-500 mt-0.5">{{ $escrowHeldCount ?? 0 }} pesanan</p>
-            </x-card>
+            <div data-tour-seller-tertahan>
+                <x-card class="border-amber-200 bg-amber-50">
+                    <div class="text-xs text-surface-500 uppercase tracking-wide">Saldo Tertahan</div>
+                    <x-price :amount="$escrowHeldTotal ?? 0" class="text-xl mt-1 block text-amber-700" />
+                    <p class="text-xs text-surface-500 mt-0.5">{{ $escrowHeldCount ?? 0 }} pesanan</p>
+                </x-card>
+            </div>
 
-            <x-card class="border-green-200 bg-green-50">
-                <div class="text-xs text-surface-500 uppercase tracking-wide">Saldo Tersedia</div>
-                <x-price :amount="$walletBalance ?? 0" class="text-xl mt-1 block text-green-700" />
-                <p class="text-xs text-surface-500 mt-0.5">SeumpamaPay</p>
-            </x-card>
+            <div data-tour-seller-saldo>
+                <x-card class="border-green-200 bg-green-50">
+                    <div class="text-xs text-surface-500 uppercase tracking-wide">Saldo Tersedia</div>
+                    <x-price :amount="$walletBalance ?? 0" class="text-xl mt-1 block text-green-700" />
+                    <p class="text-xs text-surface-500 mt-0.5">SeumpamaPay</p>
+                </x-card>
+            </div>
 
             <a href="{{ route('seller.products.index') }}" class="block">
                 <x-card class="hover:shadow-card-hover transition">
@@ -65,17 +69,19 @@
             </a>
         </div>
 
-        <x-card>
-            <h2 class="text-sm font-semibold text-surface-900 mb-3">Order per Status</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-                @foreach (['pending_payment', 'pending_processing', 'processing', 'shipped', 'completed', 'cancelled'] as $st)
-                    <div class="text-center p-3 bg-surface-50 rounded-md">
-                        <x-status-badge :status="$st" />
-                        <div class="text-lg font-semibold text-surface-900 mt-1.5">{{ $ordersByStatus[$st] ?? 0 }}</div>
-                    </div>
-                @endforeach
-            </div>
-        </x-card>
+        <div data-tour-seller-stats>
+            <x-card>
+                <h2 class="text-sm font-semibold text-surface-900 mb-3">Order per Status</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                    @foreach (['pending_payment', 'pending_processing', 'processing', 'shipped', 'completed', 'cancelled'] as $st)
+                        <div class="text-center p-3 bg-surface-50 rounded-md">
+                            <x-status-badge :status="$st" />
+                            <div class="text-lg font-semibold text-surface-900 mt-1.5">{{ $ordersByStatus[$st] ?? 0 }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </x-card>
+        </div>
 
         <x-card>
             <div class="flex items-center justify-between mb-3">
@@ -100,4 +106,5 @@
             @endif
         </x-card>
     </x-page-wrapper>
+    <x-tour role="seller" />
 @endsection

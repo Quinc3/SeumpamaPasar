@@ -1,4 +1,4 @@
-@props(['product'])
+@props(['product', 'isTourTarget' => false])
 
 @php
     $image = $product->images->first();
@@ -6,7 +6,8 @@
     $displayPrice = $hasDiscount ? (float) $product->discount_price : (float) $product->price;
 @endphp
 
-<a href="{{ route('catalog.show', $product->slug) }}" class="group block bg-white border border-surface-200 rounded-lg overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+<a href="{{ route('catalog.show', $product->slug) }}" @if($isTourTarget) data-tour-product-card @endif
+   class="group block bg-white border border-surface-200 rounded-lg overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
     <div class="relative aspect-square bg-surface-100 overflow-hidden">
         @if ($image)
             <img src="{{ Storage::url($image->path) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy">

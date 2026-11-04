@@ -40,5 +40,13 @@
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
+
+        <div class="mt-6 pt-6 border-t border-surface-200 text-center">
+            <p class="text-xs text-surface-500">Ingin coba akun demo?</p>
+            <a href="{{ route('demo.index') }}" class="text-sm font-medium text-primary-700 hover:underline mt-1 inline-block">
+                Lihat semua akun demo →
+            </a>
+        </div>
+        
     </form>
 </x-guest-layout>

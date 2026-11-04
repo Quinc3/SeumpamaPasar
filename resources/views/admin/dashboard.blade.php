@@ -6,7 +6,7 @@
     <x-banner-simulation />
 
     {{-- Statistik utama --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div data-tour-admin-stats class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <x-card>
             <div class="text-xs text-surface-500 uppercase tracking-wide">Total Pendapatan</div>
             <x-price :amount="$totalRevenue" class="text-2xl mt-1 block" />
@@ -28,8 +28,9 @@
     </div>
 
     {{-- Escrow aktif --}}
-    <x-card class="border-amber-200 bg-amber-50">
-        <div class="flex items-center justify-between gap-3">
+    <div data-tour-admin-escrow>
+            <x-card class="border-amber-200 bg-amber-50">
+                <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
                 <div class="rounded-full bg-amber-100 p-2">
                     <x-icon name="banknotes" size="md" class="text-amber-700" />
@@ -43,6 +44,7 @@
             <x-icon name="information-circle" size="md" class="text-amber-600" />
         </div>
     </x-card>
+    </div>
 
     {{-- Counts sekunder --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -145,4 +147,5 @@
             </div>
         @endif
     </x-card>
+    <x-tour role="admin" />
 @endsection
