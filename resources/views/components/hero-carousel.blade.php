@@ -12,6 +12,7 @@
                     ? ['label' => 'Daftar Gratis', 'route' => route('register'), 'icon' => 'user']
                     : null,
                 'bg' => 'from-primary-700 via-primary-600 to-primary-800',
+                'image' => asset('images/banners/banner-1.jpg'),
             ],
             [
                 'eyebrow' => 'Promo Spesial',
@@ -20,6 +21,7 @@
                 'cta' => ['label' => 'Lihat Promo', 'route' => route('catalog.index', ['sort' => 'terlaris']), 'icon' => 'bolt'],
                 'secondary' => null,
                 'bg' => 'from-amber-600 via-orange-600 to-red-600',
+                'image' => asset('images/banners/banner-2.jpg'),
             ],
             [
                 'eyebrow' => 'Keuntungan Member',
@@ -32,6 +34,7 @@
                 ],
                 'secondary' => null,
                 'bg' => 'from-teal-700 via-emerald-600 to-cyan-700',
+                'image' => asset('images/banners/banner-3.jpg'),
             ],
         ];
     }
@@ -68,8 +71,15 @@
     <div class="flex transition-transform duration-700 ease-out"
          :style="`transform: translateX(-${active * 100}%)`">
         @foreach ($slides as $slide)
-            <div class="w-full shrink-0 bg-gradient-to-br {{ $slide['bg'] }} text-white">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 min-h-[280px] sm:min-h-[320px] flex items-center">
+            <div class="w-full shrink-0 relative bg-gradient-to-br {{ $slide['bg'] }} text-white">
+                {{-- Gambar background --}}
+                @if (! empty($slide['image']))
+                    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('{{ $slide['image'] }}'); background-position: 70% center;"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-transparent"></div>
+                @endif
+
+                {{-- Konten --}}
+                <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 min-h-[280px] sm:min-h-[320px] flex items-center">
                     <div class="max-w-2xl">
                         <p class="text-xs uppercase tracking-widest text-white/80 mb-2">{{ $slide['eyebrow'] }}</p>
                         <h1 class="text-3xl sm:text-4xl font-bold leading-tight">{{ $slide['title'] }}</h1>
@@ -92,18 +102,18 @@
 
     {{-- Arrows --}}
     <button type="button" x-on:click="prev()"
-            class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition"
+            class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition z-10"
             aria-label="Slide sebelumnya">
         <x-icon name="chevron-right" size="md" class="rotate-180" />
     </button>
     <button type="button" x-on:click="next()"
-            class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition"
+            class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition z-10"
             aria-label="Slide berikutnya">
         <x-icon name="chevron-right" size="md" />
     </button>
 
     {{-- Dots --}}
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
         @foreach ($slides as $i => $slide)
             <button type="button" x-on:click="go({{ $i }})"
                     :class="active === {{ $i }} ? 'bg-white w-6' : 'bg-white/40 w-2 hover:bg-white/60'"
