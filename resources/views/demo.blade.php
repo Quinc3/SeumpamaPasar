@@ -3,7 +3,7 @@
 @section('title', 'Akun Demo — ' . config('app.name'))
 
 @section('content')
-    <div class="max-w-3xl mx-auto py-6">
+    <div class="w-full max-w-3xl mx-auto">
         {{-- Header --}}
         <div class="text-center mb-8">
             <div class="inline-flex items-center gap-2 mb-3">
@@ -63,5 +63,6 @@
         <div class="mt-6 text-center text-xs text-surface-500">
             <p>Atau <a href="{{ route('login') }}" class="text-primary-700 hover:underline font-medium">masuk manual</a> dengan email + password.</p>
         </div>
+
     </div>
 @endsection
