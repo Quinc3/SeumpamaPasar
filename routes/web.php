@@ -66,6 +66,10 @@ Route::middleware(['auth', 'not.admin'])->group(function () {
     Route::get('/wallet', [\App\Http\Controllers\WalletController::class, 'index'])->name('wallet.index');
     Route::get('/wallet/topup', [\App\Http\Controllers\WalletController::class, 'showTopup'])->name('wallet.topup');
     Route::post('/wallet/topup', [\App\Http\Controllers\WalletController::class, 'submitTopup'])->name('wallet.topup.submit');
+
+    Route::post('/produk/{product:slug}/ulasan', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
+
+    Route::get('/akun/pesanan/{order}/invoice', [\App\Http\Controllers\Buyer\OrderController::class, 'downloadInvoice'])->name('buyer.orders.invoice');
     });
 
 require __DIR__.'/auth.php';

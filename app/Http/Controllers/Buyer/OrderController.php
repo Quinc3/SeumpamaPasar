@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Buyer;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Review;
 use App\Services\OrderStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,21 +27,39 @@ class OrderController extends Controller
     public function show(Request $request, Order $order): View
     {
         abort_unless($order->buyer_id === $request->user()->id, 403);
-        $order->load(['sellerProfile', 'items', 'checkout.payment']);
 
-        return view('buyer.orders.show', compact('order'));
+        $order->load(['sellerProfile', 'items.product', 'checkout.payment']);
+
+        $reviewedProductIds = Review::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('product_id', $order->items->pluck('product_id')->filter())
+            ->pluck('product_id')
+            ->all();
+
+        return view('buyer.orders.show', compact('order', 'reviewedProductIds'));
+    }
+
+    public function downloadInvoice(Request $request, Order $order)
+    {
+        abort_unless($order->buyer_id === $request->user()->id, 403);
+
+        $order->load(['items', 'buyer', 'sellerProfile', 'checkout']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', ['order' => $order])
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download("Invoice-{$order->checkout->reference}.pdf");
     }
 
     public function complete(Request $request, Order $order, OrderStatusService $service, \App\Services\CommissionService $commissionService, \App\Services\WalletService $walletService): RedirectResponse
     {
         abort_unless($order->buyer_id === $request->user()->id, 403);
 
-        $ok = $service->transition($order, \App\Enums\OrderStatus::Completed->value);
+        $ok = $service->transition($order, OrderStatus::Completed->value);
 
         if ($ok) {
             $order->refresh();
 
-            // Release escrow ke wallet seller
             if ($order->isEscrowHeld() && (float) $order->escrow_amount > 0) {
                 $sellerUser = $order->sellerProfile->user;
                 if ($sellerUser) {
@@ -62,7 +81,6 @@ class OrderController extends Controller
                 $order->forceFill(['released_at' => now()])->save();
             }
 
-            // Award komisi affiliate (existing)
             $commissionService->awardForOrder($order);
         }
 

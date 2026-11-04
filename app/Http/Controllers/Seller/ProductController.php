@@ -20,10 +20,24 @@ class ProductController extends Controller
     public function index(Request $request): View
     {
         $seller = $request->user()->sellerProfile;
-        $products = $seller->products()
-            ->with(['category', 'images'])
-            ->orderByDesc('id')
-            ->paginate(15);
+
+        $query = $seller->products()
+            ->with(['category', 'images']);
+
+        if ($q = trim((string) $request->query('q'))) {
+            $query->where(function ($w) use ($q) {
+                $w->where('name', 'like', "%{$q}%")
+                  ->orWhere('description', 'like', "%{$q}%");
+            });
+        }
+
+        if ($status = $request->query('status')) {
+            if (in_array($status, ['draft', 'pending_review', 'active', 'rejected', 'archived'], true)) {
+                $query->where('status', $status);
+            }
+        }
+
+        $products = $query->orderByDesc('id')->paginate(15)->withQueryString();
 
         return view('seller.products.index', compact('products'));
     }

@@ -86,4 +86,9 @@ class Product extends Model
         }
         return (int) round((1 - (float) $this->discount_price / (float) $this->price) * 100);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
 }

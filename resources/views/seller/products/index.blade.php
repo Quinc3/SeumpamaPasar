@@ -8,7 +8,7 @@
             <x-alert variant="success">{{ session('status') }}</x-alert>
         @endif
 
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h2 class="text-lg font-semibold text-surface-900">Produk</h2>
             @if ($products->isNotEmpty())
                 <a href="{{ route('seller.products.create') }}">
@@ -20,13 +20,45 @@
             @endif
         </div>
 
+        {{-- Search & filter --}}
+        <form method="GET" action="{{ route('seller.products.index') }}" class="flex flex-col sm:flex-row gap-2">
+            <div class="relative flex-1">
+                <x-icon name="magnifying-glass" size="md" class="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none" />
+                <input type="search" name="q" value="{{ request('q') }}"
+                    placeholder="Cari nama atau deskripsi produk…"
+                    class="w-full pl-10 pr-3 py-2 rounded-md border-surface-300 bg-white text-sm focus:border-primary-500 focus:ring-primary-500">
+            </div>
+            <select name="status" class="rounded-md border-surface-300 bg-white text-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="">Semua Status</option>
+                <option value="active" @selected(request('status') === 'active')>Aktif</option>
+                <option value="pending_review" @selected(request('status') === 'pending_review')>Menunggu Review</option>
+                <option value="rejected" @selected(request('status') === 'rejected')>Ditolak</option>
+                <option value="draft" @selected(request('status') === 'draft')>Draf</option>
+                <option value="archived" @selected(request('status') === 'archived')>Diarsipkan</option>
+            </select>
+            <x-primary-button type="submit">Cari</x-primary-button>
+            @if (request('q') || request('status'))
+                <a href="{{ route('seller.products.index') }}">
+                    <x-secondary-button type="button">Reset</x-secondary-button>
+                </a>
+            @endif
+        </form>
+
         @if ($products->isEmpty())
             <x-card padding="none">
-                <x-empty-state icon="tag" title="Belum ada produk" description="Tambahkan produk pertama Anda.">
+                <x-empty-state icon="tag"
+                    title="{{ request('q') || request('status') ? 'Tidak ada produk yang cocok' : 'Belum ada produk' }}"
+                    description="{{ request('q') || request('status') ? 'Coba ubah kata kunci atau filter.' : 'Tambahkan produk pertama Anda.' }}">
                     <x-slot:action>
-                        <a href="{{ route('seller.products.create') }}">
-                            <x-primary-button type="button">Tambah Produk</x-primary-button>
-                        </a>
+                        @if (request('q') || request('status'))
+                            <a href="{{ route('seller.products.index') }}">
+                                <x-secondary-button type="button">Reset filter</x-secondary-button>
+                            </a>
+                        @else
+                            <a href="{{ route('seller.products.create') }}">
+                                <x-primary-button type="button">Tambah Produk</x-primary-button>
+                            </a>
+                        @endif
                     </x-slot:action>
                 </x-empty-state>
             </x-card>

@@ -54,7 +54,30 @@ class CatalogController extends Controller
             404
         );
 
-        $product->load(['sellerProfile', 'images', 'category', 'wholesalePriceTiers']);
+        $product->load([
+            'sellerProfile', 'images', 'category', 'wholesalePriceTiers',
+            'reviews.user',
+        ]);
+
+        // Cek apakah user bisa review
+        $canReview = false;
+        $hasReviewed = false;
+        $reviewCount = $product->reviews->count();
+        $ratingBreakdown = $product->reviews->groupBy('rating')->map->count();
+
+        if ($request->user() && $request->user()->role !== \App\Enums\UserRole::Admin) {
+            $hasReviewed = $product->reviews->where('user_id', $request->user()->id)->isNotEmpty();
+
+            if (! $hasReviewed) {
+                $canReview = \App\Models\OrderItem::query()
+                    ->where('product_id', $product->id)
+                    ->whereHas('order', fn ($q) => $q
+                        ->where('buyer_id', $request->user()->id)
+                        ->where('status', \App\Enums\OrderStatus::Completed->value)
+                    )
+                    ->exists();
+            }
+        }
 
         $resolved = $priceResolver->resolve($request->user(), $product, max(1, (int) $product->min_purchase_qty));
         $isVerified = $priceResolver->isVerifiedBusiness($request->user());
@@ -73,9 +96,10 @@ class CatalogController extends Controller
             ->limit(4)
             ->get();
 
-        return view('catalog.show', compact(
-            'product', 'related', 'resolved', 'isVerified',
-            'isMember', 'displayUnitPrice', 'memberDiscount'
-        ));
+            return view('catalog.show', compact(
+                'product', 'related', 'resolved', 'isVerified',
+                'isMember', 'displayUnitPrice', 'memberDiscount',
+                'canReview', 'hasReviewed', 'reviewCount', 'ratingBreakdown'
+            ));
     }
 }
