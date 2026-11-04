@@ -15,28 +15,28 @@ class DemoController extends Controller
         $accounts = [
             [
                 'role' => 'Admin',
-                'email' => 'admin@example.test',
+                'email' => 'admin@seumpama.com',
                 'desc' => 'Kelola seluruh platform — moderasi produk, verifikasi bisnis, kelola penjual & afiliasi, lihat laporan.',
                 'icon' => 'check-circle',
                 'color' => 'amber',
             ],
             [
                 'role' => 'Seller Individu',
-                'email' => 'seller@example.test',
+                'email' => 'seller@seumpama.com',
                 'desc' => 'Toko Demo — penjual individu. Kelola produk, proses pesanan, lihat pendapatan toko.',
                 'icon' => 'home',
                 'color' => 'primary',
             ],
             [
                 'role' => 'Seller Bisnis (B2B)',
-                'email' => 'business@example.test',
+                'email' => 'business@seumpama.com',
                 'desc' => 'Grosir Demo — penjual bisnis terverifikasi. Akses harga grosir, tier B2B, minimum order quantity.',
                 'icon' => 'credit-card',
                 'color' => 'green',
             ],
             [
                 'role' => 'Buyer (Member + Affiliate)',
-                'email' => 'buyer@example.test',
+                'email' => 'buyer@seumpama.com',
                 'desc' => 'Pembeli personal dengan diskon member 5% dan bisa promosikan produk lewat link afiliasi.',
                 'icon' => 'user',
                 'color' => 'blue',

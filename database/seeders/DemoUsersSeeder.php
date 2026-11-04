@@ -21,7 +21,7 @@ class DemoUsersSeeder extends Seeder
     {
         // 1 seller individu aktif + 1 produk
         $sellerUser = User::updateOrCreate(
-            ['email' => 'seller@example.test'],
+            ['email' => 'seller@seumpama.com'],
             [
                 'name' => 'Penjual Demo',
                 'password' => Hash::make('password'),
@@ -60,7 +60,7 @@ class DemoUsersSeeder extends Seeder
 
         // 1 buyer personal (tanpa seller_profile)
         User::updateOrCreate(
-            ['email' => 'buyer@example.test'],
+            ['email' => 'buyer@seumpama.com'],
             [
                 'name' => 'Pembeli Demo',
                 'password' => Hash::make('password'),

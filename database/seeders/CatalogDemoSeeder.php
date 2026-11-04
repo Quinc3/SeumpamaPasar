@@ -80,7 +80,7 @@ class CatalogDemoSeeder extends Seeder
         }
 
         $user = User::updateOrCreate(
-            ['email' => 'business@example.test'],
+            ['email' => 'business@seumpama.com'],
             [
                 'name' => 'Bisnis Demo',
                 'password' => Hash::make('password'),

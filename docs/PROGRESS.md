@@ -114,10 +114,10 @@
 
 | Email | Password | Peran |
 |---|---|---|
-| admin@example.test | password | Admin |
-| seller@example.test | password | Seller individu (Toko Demo) |
-| business@example.test | password | Seller bisnis verified (Grosir Demo) |
-| buyer@example.test | password | Buyer personal (member + affiliate) |
+| admin@seumpama.com | password | Admin |
+| seller@seumpama.com | password | Seller individu (Toko Demo) |
+| business@seumpama.com | password | Seller bisnis verified (Grosir Demo) |
+| buyer@seumpama.com | password | Buyer personal (member + affiliate) |
 
 ---
 

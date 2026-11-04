@@ -55,14 +55,14 @@ class ReviewSeeder extends Seeder
     ];
 
     private array $dummyReviewers = [
-        ['name' => 'Budi Santoso',     'email' => 'reviewer1@example.test'],
-        ['name' => 'Siti Nurhaliza',   'email' => 'reviewer2@example.test'],
-        ['name' => 'Ahmad Wijaya',     'email' => 'reviewer3@example.test'],
-        ['name' => 'Dewi Lestari',     'email' => 'reviewer4@example.test'],
-        ['name' => 'Rudi Hartono',     'email' => 'reviewer5@example.test'],
-        ['name' => 'Maya Anggraini',   'email' => 'reviewer6@example.test'],
-        ['name' => 'Andi Pratama',     'email' => 'reviewer7@example.test'],
-        ['name' => 'Rina Susanti',     'email' => 'reviewer8@example.test'],
+        ['name' => 'Budi Santoso',     'email' => 'reviewer1@seumpama.com'],
+        ['name' => 'Siti Nurhaliza',   'email' => 'reviewer2@seumpama.com'],
+        ['name' => 'Ahmad Wijaya',     'email' => 'reviewer3@seumpama.com'],
+        ['name' => 'Dewi Lestari',     'email' => 'reviewer4@seumpama.com'],
+        ['name' => 'Rudi Hartono',     'email' => 'reviewer5@seumpama.com'],
+        ['name' => 'Maya Anggraini',   'email' => 'reviewer6@seumpama.com'],
+        ['name' => 'Andi Pratama',     'email' => 'reviewer7@seumpama.com'],
+        ['name' => 'Rina Susanti',     'email' => 'reviewer8@seumpama.com'],
     ];
 
     public function run(): void
@@ -143,7 +143,7 @@ class ReviewSeeder extends Seeder
             );
         }
 
-        $this->command->info('Reviewer pool siap (8 buyer + buyer@example.test).');
+        $this->command->info('Reviewer pool siap (8 buyer + buyer@seumpama.com).');
     }
 
     private function pickRating(): int

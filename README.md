@@ -40,23 +40,23 @@ Buka [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
 | Email | Password | Peran |
 |---|---|---|
-| admin@example.test | password | Admin |
-| seller@example.test | password | Seller individu (Toko Demo) |
-| business@example.test | password | Seller bisnis (Grosir Demo) |
-| buyer@example.test | password | Buyer (Member + Affiliate) |
+| admin@seumpama.com | password | Admin |
+| seller@seumpama.com | password | Seller individu (Toko Demo) |
+| business@seumpama.com | password | Seller bisnis (Grosir Demo) |
+| buyer@seumpama.com | password | Buyer (Member + Affiliate) |
 
 ---
 
 ## Demo Scenario (10–15 menit)
 
 ### 1. Buyer belanja
-- Login `buyer@example.test` → katalog → tambah produk dari 2 toko berbeda
+- Login `buyer@seumpama.com` → katalog → tambah produk dari 2 toko berbeda
 - `/keranjang` → grouped per seller, centang sebagian, checkout
 - Pilih alamat + **SeumpamaPay** (kalau saldo cukup) / **VA BCA** (kalau tidak)
 - Bayar Berhasil → order masuk ke seller, dana ditahan **escrow**
 
 ### 2. Seller proses
-- Login `seller@example.test` → `/toko/pesanan` → **Proses** → **Kirim**
+- Login `seller@seumpama.com` → `/toko/pesanan` → **Proses** → **Kirim**
 - Saldo tertahan terlihat di dashboard
 
 ### 3. Buyer konfirmasi → escrow cair
@@ -68,14 +68,14 @@ Buka [http://127.0.0.1:8000](http://127.0.0.1:8000).
 - Saldo bertambah, riwayat tercatat
 
 ### 5. B2B demo
-- Login `business@example.test` → katalog → produk **Kaos Polos Grosir** (tier harga)
+- Login `business@seumpama.com` → katalog → produk **Kaos Polos Grosir** (tier harga)
 - Qty 24 → harga jadi **Rp 65.000/pcs** (bukan Rp 75.000)
 
 ### 6. B2B negative
 - Login buyer personal (bukan bisnis) → akses URL produk B2B → **404**
 
 ### 7. Member benefit
-- Login `buyer@example.test` (Member aktif) → checkout → diskon **5%** terlihat di produk B2C
+- Login `buyer@seumpama.com` (Member aktif) → checkout → diskon **5%** terlihat di produk B2C
 - *(Diskon tidak berlaku di produk B2B — tier sudah diskon)*
 
 ### 8. Affiliate
